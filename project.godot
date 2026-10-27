@@ -4,6 +4,7 @@ config_version=5
 config/name="怪獸甩尾盃 Monster Kart"
 config/description="原創 3D 怪獸卡丁車：12 款怪獸、道具大戰、離線三圈競速"
 run/main_scene="res://scenes/Main.tscn"
+config/icon="res://assets/icon.svg"
 config/features=PackedStringArray("4.5", "GL Compatibility")
 
 [display]
