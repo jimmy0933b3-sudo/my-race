@@ -2,6 +2,8 @@ extends "res://scripts/race_ui.gd"
 ## Complete skin/layout rebuild with one cohesive graphic identity.
 ## Inherits battle controls and signals from the tested UI interface.
 const BADGE = preload("res://scripts/garage_badge.gd")
+const LIVE_MAP = preload("res://scripts/race_minimap.gd")
+var race_minimap
 const PALETTE = {
  "night": Color("#101c35ee"),
  "panel": Color("#1d2c49ec"),
@@ -110,6 +112,13 @@ func _make_hud() -> void:
  _small_label(hud,"SPEED / RACE TIME",Vector2(1025,29),231)
  speed_label=_text(hud,"0 KM/H",Vector2(1024,54),Vector2(223,44),29,PALETTE["mint"],true)
  time_label=_text(hud,"00:00",Vector2(1024,98),Vector2(223,33),19,PALETTE["paper"],true)
+ _glow_panel(hud,Vector2(1004,156),Vector2(254,254),PALETTE["mint"],Color("#111f38ef"),22)
+ _small_label(hud,"全賽道  •  8 位選手",Vector2(1024,167),220)
+ race_minimap=LIVE_MAP.new()
+ race_minimap.position=Vector2(1014,197)
+ race_minimap.size=Vector2(234,202)
+ race_minimap.mouse_filter=Control.MOUSE_FILTER_IGNORE
+ hud.add_child(race_minimap)
  _glow_panel(hud,Vector2(441,18),Vector2(392,75),Color("#a5d6fa"),Color("#17233be3"),18)
  map_title=_text(hud,"MONSTER GRAND PRIX",Vector2(452,22),Vector2(370,29),18,PALETTE["paper"],true)
  boost_bar=ProgressBar.new()
@@ -139,6 +148,15 @@ func _make_hud() -> void:
  var home=_button(hud,"⌂",Vector2(925,27),Vector2(61,62),Color("#425778e5"),27)
  home.pressed.connect(func():return_to_menu.emit())
  _text(hud,"AUTO DRIVE",Vector2(481,649),Vector2(330,33),17,PALETTE["paper"],true)
+
+func configure_minimap(track:Node3D,map_index:int)->void:
+ if race_minimap != null:
+  race_minimap.configure(track)
+ map_title.text=["MONSTER FESTIVAL GP","EMERALD MEADOWS GP","GOLDEN DUNES GP","ORBITAL STAR RING GP"][clampi(map_index,0,3)]
+
+func update_minimap(hero:Vector3,heading:float,bots:Array[Dictionary])->void:
+ if race_minimap != null:
+  race_minimap.update_racers(hero,heading,bots)
 
 func update_hud(place:int,lap:int,speed:float,time:float,item:String)->void:
  super.update_hud(place,lap,speed,time,item)
