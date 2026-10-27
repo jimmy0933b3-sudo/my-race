@@ -67,7 +67,11 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          godot --headless --path . --script tests/race_smoke.gd > "$RUNNER_TEMP/race-smoke.log" 2>&1
+          if ! timeout --signal=TERM 120s godot --headless --path . --script tests/race_smoke.gd > "$RUNNER_TEMP/race-smoke.log" 2>&1; then
+            cat "$RUNNER_TEMP/race-smoke.log"
+            echo "::error::Gameplay regression failed or exceeded 120 seconds"
+            exit 1
+          fi
           cat "$RUNNER_TEMP/race-smoke.log"
           grep -Fq 'MONSTER KART SMOKE OK' "$RUNNER_TEMP/race-smoke.log"
           if grep -E 'SCRIPT ERROR|Parse Error|Invalid call|Invalid access|ERROR:' "$RUNNER_TEMP/race-smoke.log"; then exit 1; fi
