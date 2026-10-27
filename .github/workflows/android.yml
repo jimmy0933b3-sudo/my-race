@@ -63,6 +63,15 @@ jobs:
             exit 1
           fi
 
+      - name: Run headless kart gameplay regression
+        shell: bash
+        run: |
+          set -euo pipefail
+          godot --headless --path . --script tests/race_smoke.gd > "$RUNNER_TEMP/race-smoke.log" 2>&1
+          cat "$RUNNER_TEMP/race-smoke.log"
+          grep -Fq 'MONSTER KART SMOKE OK' "$RUNNER_TEMP/race-smoke.log"
+          if grep -E 'SCRIPT ERROR|Parse Error|Invalid call|Invalid access|ERROR:' "$RUNNER_TEMP/race-smoke.log"; then exit 1; fi
+
       - name: Configure Godot Android SDK
         run: godot --headless --editor --path . --script tools/configure_android.gd
 
