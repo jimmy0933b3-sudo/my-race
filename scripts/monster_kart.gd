@@ -43,7 +43,9 @@ func _mat(col: Color, metallic := 0.0, roughness := 0.45, glow := false) -> Stan
   m.emission_energy_multiplier = 1.9
  return m
 
-func _mesh(mesh: Mesh, at: Vector3, col: Color, parent: Node3D = model, metal := 0.0, glow := false) -> MeshInstance3D:
+func _mesh(mesh: Mesh, at: Vector3, col: Color, parent: Node3D = null, metal := 0.0, glow := false) -> MeshInstance3D:
+ if parent == null:
+  parent = model
  var node = MeshInstance3D.new()
  node.mesh = mesh
  node.position = at
@@ -51,12 +53,12 @@ func _mesh(mesh: Mesh, at: Vector3, col: Color, parent: Node3D = model, metal :=
  parent.add_child(node)
  return node
 
-func _box(at: Vector3, sz: Vector3, col: Color, parent: Node3D = model, metal := 0.0, glow := false) -> MeshInstance3D:
+func _box(at: Vector3, sz: Vector3, col: Color, parent: Node3D = null, metal := 0.0, glow := false) -> MeshInstance3D:
  var b = BoxMesh.new()
  b.size = sz
  return _mesh(b, at, col, parent, metal, glow)
 
-func _ball(at: Vector3, radii: Vector3, col: Color, parent: Node3D = model, glow := false) -> MeshInstance3D:
+func _ball(at: Vector3, radii: Vector3, col: Color, parent: Node3D = null, glow := false) -> MeshInstance3D:
  var s = SphereMesh.new()
  s.radius = 1.0
  s.height = 2.0
