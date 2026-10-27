@@ -2,10 +2,12 @@ extends Node3D
 ## Monster Kart 3D: three-lap arcade racing with drift, rivals and item battles.
 const Kart = preload("res://scripts/monster_kart.gd")
 const Circuit = preload("res://scripts/track.gd")
-const RaceUI = preload("res://scripts/race_ui.gd")
+const RaceUI = preload("res://scripts/race_ui_rework.gd")
+const GarageStage = preload("res://scripts/garage_stage.gd")
 const ArcadeAudio = preload("res://scripts/audio.gd")
 const LAPS = 3
 var circuit
+var showroom
 var camera: Camera3D
 var interface
 var audio
@@ -43,6 +45,8 @@ func _ready() -> void:
  circuit = Circuit.new()
  circuit.name = "CandyMonsterCircuit"
  add_child(circuit)
+ showroom = GarageStage.new()
+ add_child(showroom)
  camera = Camera3D.new()
  camera.current = true
  camera.fov = 68
@@ -124,6 +128,7 @@ func _clear_race() -> void:
  effect_nodes.clear()
 
 func _start_race() -> void:
+ showroom.visible = false
  _clear_race()
  if is_instance_valid(display_kart):
   display_kart.queue_free()
@@ -159,6 +164,7 @@ func _start_race() -> void:
  _follow_camera(1.0)
 
 func _return_to_menu() -> void:
+ showroom.visible = true
  _clear_race()
  race_state = "menu"
  audio.set_race_active(false)
