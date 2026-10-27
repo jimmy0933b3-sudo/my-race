@@ -58,8 +58,8 @@ func _loft(rings: Array, material: Material) -> void:
    var v0 = float(j)/float(segments)
    var v1 = float(j+1)/float(segments)
    for item in [
-    {"p":p0,"uv":Vector2(ua,v0)},{"p":p2,"uv":Vector2(ub,v0)},{"p":p1,"uv":Vector2(ua,v1)},
-    {"p":p1,"uv":Vector2(ua,v1)},{"p":p2,"uv":Vector2(ub,v0)},{"p":p3,"uv":Vector2(ub,v1)}
+    {"p":p0,"uv":Vector2(ua,v0)},{"p":p1,"uv":Vector2(ua,v1)},{"p":p2,"uv":Vector2(ub,v0)},
+    {"p":p1,"uv":Vector2(ua,v1)},{"p":p3,"uv":Vector2(ub,v1)},{"p":p2,"uv":Vector2(ub,v0)}
    ]:
     tube.set_uv(item["uv"])
     tube.add_vertex(item["p"])
