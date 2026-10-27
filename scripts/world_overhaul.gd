@@ -36,7 +36,7 @@ func _terrain() -> void:
  noise.fractal_octaves = 3
  noise.fractal_gain = 0.48
  noise.fractal_type = FastNoiseLite.FRACTAL_FBM
- var grid := 64
+ var grid := 96
  var extent := 156.0
  var positions: Array[Vector3] = []
  for z in range(grid + 1):
@@ -52,18 +52,26 @@ func _terrain() -> void:
    var max_height = 10.0 if biome == 2 else 7.2
    var y = -0.10 + blend * maxf(0.0, wave * max_height + fine + 1.2)
    positions.append(Vector3(px,y,pz))
+ # The previous terrain regenerated each face normal separately, causing
+ # chunky faceted triangles. Share smoothed normals across the whole grid.
+ var smooth_normals: Array[Vector3] = []
+ for z in range(grid+1):
+  for x in range(grid+1):
+   var left = positions[z*(grid+1)+maxi(x-1,0)]
+   var right = positions[z*(grid+1)+mini(x+1,grid)]
+   var up = positions[maxi(z-1,0)*(grid+1)+x]
+   var down = positions[mini(z+1,grid)*(grid+1)+x]
+   var tangent_x = (right-left).normalized()
+   var tangent_z = (down-up).normalized()
+   smooth_normals.append(tangent_z.cross(tangent_x).normalized())
  var tool = SurfaceTool.new()
  tool.begin(Mesh.PRIMITIVE_TRIANGLES)
  for z in range(grid):
   for x in range(grid):
-   var index = z*(grid+1)+x
-   var a = positions[index]
-   var b = positions[index+1]
-   var c = positions[index+(grid+1)]
-   var d = positions[index+(grid+2)]
-   for p in [a,c,b,b,c,d]:
-    tool.add_vertex(p)
- tool.generate_normals()
+   var idx = z*(grid+1)+x
+   for vertex_idx in [idx,idx+grid+1,idx+1,idx+1,idx+grid+1,idx+grid+2]:
+    tool.set_normal(smooth_normals[vertex_idx])
+    tool.add_vertex(positions[vertex_idx])
  terrain = MeshInstance3D.new()
  terrain.name = "SculptedRollingTerrain"
  terrain.mesh = tool.commit()
