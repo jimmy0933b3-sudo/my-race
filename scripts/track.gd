@@ -1,7 +1,7 @@
 extends Node3D
 ## Fantasy circuit constructed entirely from mobile-friendly 3D meshes.
-const SEGMENTS := 180
-const HALF_WIDTH := 8.6
+const SEGMENTS = 180
+const HALF_WIDTH = 8.6
 var centers: Array[Vector3] = []
 var total_length := 0.0
 var segment_lengths: Array[float] = []
