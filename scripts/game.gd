@@ -28,6 +28,7 @@ var previously_drifting := false
 var boost_time := 0.0
 var shield_time := 0.0
 var bump_wait := 0.0
+var wall_hits := 0
 var race_time := 0.0
 var count_time := 3.4
 var current_item := ""
@@ -142,6 +143,7 @@ func _start_race() -> void:
  boost_time = 0.0
  shield_time = 0.0
  bump_wait = 0.0
+ wall_hits = 0
  current_item = ""
  race_time = 0.0
  player_lap = 1
@@ -152,13 +154,15 @@ func _start_race() -> void:
   var progress = 3.0 - float(row + 1) * 2.1
   var lane = -3.5 if j % 2 == 0 else 3.5
   var c = _spawn((selected + j + 2) % 12, circuit.sample(progress, lane) + Vector3(0, 0.14, 0), _angle_for(circuit.direction(progress)))
-  opponents.append({"car": c, "progress": progress, "lane": lane, "speed": 29.0 + float(j % 4) * 1.65, "stun": 0.0, "seed": float(j) * 1.7, "boost": 0.0})
+  opponents.append({"car": c, "color": Color(Kart.ROSTER[(selected + j + 2) % 12]["color"]), "progress": progress, "lane": lane, "speed": 29.0 + float(j % 4) * 1.65, "stun": 0.0, "seed": float(j) * 1.7, "boost": 0.0})
  _create_pickups()
  race_state = "countdown"
  audio.set_race_active(true)
  audio.play_cue("countdown")
  count_time = 3.4
  interface.show_race()
+ interface.configure_minimap(circuit, selected_map)
+ interface.update_minimap(player.position, yaw, opponents)
  interface.update_hud(1, 1, 0.0, 0.0, "")
  interface.show_countdown("3")
  _follow_camera(1.0)
@@ -234,6 +238,7 @@ func _physics_process(dt: float) -> void:
  _update_items(dt)
  _update_effects(dt)
  _update_rank()
+ interface.update_minimap(player.position, yaw, opponents)
  interface.update_hud(race_rank, player_lap, speed, race_time, _item_label())
  _follow_camera(minf(1.0, dt * 4.8))
 
@@ -245,7 +250,7 @@ func _update_player(dt: float) -> void:
  heading_steer = move_toward(heading_steer, steer, dt * 6.5)
  var nearest = circuit.nearest_index(player.position)
  var offset = player.position.distance_to(circuit.centers[nearest])
- var offroad = offset > Circuit.HALF_WIDTH - 0.1
+ var offroad = offset > Circuit.HALF_WIDTH - 1.95
  var chosen_stats = Kart.ROSTER[selected]
  var max_speed = 35.0 + float(chosen_stats["speed"]) * 1.6
  if offroad:
@@ -273,10 +278,23 @@ func _update_player(dt: float) -> void:
  var forward = Vector3(-sin(yaw), 0.0, -cos(yaw))
  player.position += forward * speed * dt
  player.position.y = 0.26
- if offset > Circuit.HALF_WIDTH + 6.0:
-  var correction = (circuit.centers[nearest] - player.position).normalized()
-  player.position += correction * dt * 17.0
-  speed = minf(speed, 15.0)
+ # Arcade movement bypasses the physics engine; apply continuous circuit
+ # boundary contact ourselves so rail meshes can NEVER be driven through.
+ var contact: Dictionary = circuit.constrain_position(player.position, 1.45)
+ player.position = contact["position"]
+ if bool(contact["collided"]):
+  wall_hits += 1
+  var outward: Vector3 = contact["normal"]
+  var into_wall = forward.dot(outward)
+  if into_wall > 0.0:
+   var reflected = (forward - outward * 2.0 * into_wall).normalized()
+   yaw = _angle_for(reflected)
+  speed = minf(speed * 0.48, 15.0)
+  boost_time = minf(boost_time, 0.35)
+  if bump_wait <= 0.0:
+   _flash(player.position + Vector3(0, 0.75, 0), Color("#ffdb9f"))
+   audio.play_cue("hit")
+   bump_wait = 0.44
  player.rotation.y = yaw
  player.animate_kart(dt, speed, active_drift)
  var index = circuit.nearest_index(player.position)
