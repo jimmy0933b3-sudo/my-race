@@ -36,9 +36,11 @@ func _round_rect(rect:Rect2,color:Color,radius:float=8.0)->void:
  draw_rect(Rect2(rect.position+Vector2(0,radius),Vector2(rect.size.x,rect.size.y-radius*2.0)),color)
 
 func _ellipse(center:Vector2,radius:Vector2,color:Color)->void:
- draw_set_transform(center,0.0,radius)
- draw_circle(Vector2.ZERO,1.0,color)
- draw_set_transform(Vector2.ZERO,0.0,Vector2.ONE)
+ var vertices = PackedVector2Array()
+ for i in range(25):
+  var a = TAU * float(i) / 24.0
+  vertices.append(center + Vector2(cos(a) * radius.x, sin(a) * radius.y))
+ draw_colored_polygon(vertices, color)
 
 func _triangle(a:Vector2,b:Vector2,c:Vector2,col:Color)->void:
  draw_colored_polygon(PackedVector2Array([a,b,c]),col)
