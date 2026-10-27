@@ -20,6 +20,8 @@ var paint: Color
 var trim: Color
 var shell: Color
 const KART_ART = preload("res://scripts/kart_art.gd")
+const BODY_STUDIO = preload("res://scripts/kart_body_studio.gd")
+var chassis_detail
 var art_detail
 var kind_id := 0
 var timer := 0.0
@@ -36,6 +38,9 @@ func configure(index: int) -> void:
  art_detail = KART_ART.new()
  model.add_child(art_detail)
  art_detail.decorate(kind_id, paint, trim, wheels)
+ chassis_detail = BODY_STUDIO.new()
+ model.add_child(chassis_detail)
+ chassis_detail.build(paint, trim, kind_id)
 
 func _mat(col: Color, metallic := 0.0, roughness := 0.45, glow := false) -> StandardMaterial3D:
  var m = StandardMaterial3D.new()
@@ -196,3 +201,5 @@ func animate_kart(dt: float, drive_speed: float, drifting: bool) -> void:
   wheel.rotation.x += drive_speed * dt * 1.4
  if art_detail != null:
   art_detail.animate_details(dt, timer, drive_speed)
+ if chassis_detail != null:
+  chassis_detail.animate_body(dt, drive_speed, drifting)
