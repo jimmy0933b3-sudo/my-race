@@ -30,6 +30,20 @@ func _run_tests() -> void:
   assert(game.selected == i, "Monster selection must work")
   assert(game.display_kart.art_detail != null, "monster art component")
   assert(game.display_kart.art_detail.detail_count >= 40, "detailed car sculpting")
+ assert(game.interface.map_buttons.size() == 4, "four map choices must render in garage")
+ for map_index in range(4):
+  game.interface._select_map(map_index)
+  assert(game.selected_map == map_index, "selection reaches game controller")
+  assert(game.circuit.map_index == map_index, "correct track geometry selected")
+  assert(game.circuit.centers.size() == game.circuit.SEGMENTS, "full traversable circuit")
+  assert(game.circuit.total_length > 250.0, "complete closed loop")
+  if map_index == 0:
+   assert(game.circuit.themed_landmarks == 4, "original monster park is retained")
+  else:
+   assert(game.circuit.alternate_detail != null, "new distinct biome artwork loaded")
+   assert(game.circuit.alternate_detail.biome == map_index, "correct unique biome")
+   assert(game.circuit.alternate_detail.landmark_count >= 24, "biome landmarks and billboards")
+   assert(game.circuit.alternate_detail.scatter_count >= 800, "dense instanced decoration")
  game._start_race()
  assert(game.opponents.size() == 7, "seven AI opponents")
  assert(game.player != null, "playable monster car")
@@ -69,6 +83,6 @@ func _run_tests() -> void:
  assert(game.race_state == "finished", "finish panel")
  game._return_to_menu()
  assert(game.race_state == "menu", "back to garage")
- print("MONSTER KART SMOKE OK: 12 cars, 4 track zones, music, settings, pause, 7 AI, drift, items and finish")
+ print("MONSTER KART SMOKE OK: 12 cars, 4 selectable 3D maps, detailed biomes, music, settings, pause, 7 AI, drift, items and finish")
  game.queue_free()
  quit(0)
