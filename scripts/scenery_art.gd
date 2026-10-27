@@ -108,6 +108,29 @@ func _place(index: float, side: float, distance := 20.0, spin := 0.0) -> void:
  add_child(scene_root)
  landmark_count += 1
 
+func _paint_landscape() -> void:
+ # Staggered mountain terraces and charming floating islands create depth,
+ # but never obstruct the playable road.
+ scene_root = Node3D.new()
+ scene_root.name = "DistantLandscape"
+ add_child(scene_root)
+ for i in range(26):
+  var a = TAU * float(i) / 26.0
+  var radius = 113.0 + rng.randf_range(-8.0, 13.0)
+  var p = Vector3(cos(a) * radius, 0, sin(a) * radius)
+  var base_r = rng.randf_range(6.0, 12.0)
+  var h = rng.randf_range(9.0, 25.0)
+  _cone(p + Vector3(0, h * 0.49, 0), base_r, h, [Color("#9abbce"), Color("#b8c5df"), Color("#b8d3ba")][i % 3])
+  _cone(p + Vector3(0, h * 0.82, 0), base_r * 0.36, h * 0.30, Color("#e8f3ee"))
+ for n in range(7):
+  var angle = float(n) * TAU / 7.0
+  var point = Vector3(cos(angle) * 39.0, 0.0, sin(angle) * 31.0)
+  _orb(point + Vector3(0, 0.35, 0), Vector3(7.8, 0.52, 7.3), Color("#7ed7bb"))
+  _orb(point + Vector3(0, 0.65, 0), Vector3(4.3, 0.45, 4.0), Color("#9beaaf"))
+  for spot in range(6):
+   var da = float(spot) * TAU / 6.0
+   _orb(point + Vector3(cos(da) * 4.9, 0.96, sin(da) * 4.8), Vector3(0.26, 0.22, 0.26), [Color("#ffd69d"), Color("#fcb6d9"), Color("#a9e9ff")][spot % 3], true, true)
+
 func _build_district(zone: int) -> void:
  var start = 19.0 + float(zone) * 43.0
  # City scale raises as the car approaches. All scenery stays outside the road.
@@ -117,10 +140,26 @@ func _build_district(zone: int) -> void:
   for side in [-1.0, 1.0]:
    _place(at_index, side, 17.5 + (n % 2) * 6.5, 0.12 * float(n % 3))
    match zone:
-    0: _candy_shop(scale_f) if n % 2 == 0 else _ice_palace(scale_f)
-    1: _tree_house(scale_f) if n % 2 == 0 else _giant_fungi(scale_f)
-    2: _moon_falls(scale_f) if n % 2 == 0 else _constellation_gate(scale_f)
-    3: _monster_tower(scale_f, n) if n % 2 == 0 else _neon_rocket(scale_f)
+    0:
+     if n % 2 == 0:
+      _candy_shop(scale_f)
+     else:
+      _ice_palace(scale_f)
+    1:
+     if n % 2 == 0:
+      _tree_house(scale_f)
+     else:
+      _giant_fungi(scale_f)
+    2:
+     if n % 2 == 0:
+      _moon_falls(scale_f)
+     else:
+      _constellation_gate(scale_f)
+    3:
+     if n % 2 == 0:
+      _monster_tower(scale_f, n)
+     else:
+      _neon_rocket(scale_f)
  # Massive landmarks provide a silhouette visible across the map.
  _place(start + 12.0, 1.0, 34.0)
  match zone:
