@@ -21,6 +21,8 @@ var trim: Color
 var shell: Color
 const KART_ART = preload("res://scripts/kart_art.gd")
 const BODY_STUDIO = preload("res://scripts/kart_body_studio.gd")
+const PREMIUM_FINISH = preload("res://scripts/kart_premium_finish.gd")
+var premium_finish
 var chassis_detail
 var art_detail
 var kind_id := 0
@@ -41,6 +43,9 @@ func configure(index: int) -> void:
  chassis_detail = BODY_STUDIO.new()
  model.add_child(chassis_detail)
  chassis_detail.build(paint, trim, kind_id)
+ premium_finish = PREMIUM_FINISH.new()
+ model.add_child(premium_finish)
+ premium_finish.build(kind_id,paint,trim,wheels)
 
 func _mat(col: Color, metallic := 0.0, roughness := 0.45, glow := false) -> StandardMaterial3D:
  var m = StandardMaterial3D.new()
