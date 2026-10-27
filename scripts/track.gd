@@ -84,7 +84,7 @@ func constrain_position(candidate: Vector3, clearance: float = 1.45) -> Dictiona
  var p = Vector2(candidate.x, candidate.z)
  var best_point = Vector2(centers[near].x, centers[near].z)
  var best_sq := INF
- var best_segment := near
+ var best_segment: int = near
  for index in [posmod(near - 1, SEGMENTS), near]:
   var a = Vector2(centers[index].x, centers[index].z)
   var next: Vector3 = centers[(index + 1) % SEGMENTS]
