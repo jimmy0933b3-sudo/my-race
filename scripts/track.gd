@@ -2,6 +2,8 @@ extends Node3D
 ## Fantasy circuit constructed entirely from mobile-friendly 3D meshes.
 const SCENERY_ART = preload("res://scripts/scenery_art.gd")
 const BIOME_WORLD = preload("res://scripts/biome_world.gd")
+const WORLD_OVERHAUL = preload("res://scripts/world_overhaul.gd")
+var premium_road
 var map_index := 0
 var alternate_detail
 var scenery_detail
@@ -38,6 +40,9 @@ func _ready() -> void:
   segment_lengths.append(size)
   total_length += size
  _build_world()
+ premium_road = WORLD_OVERHAUL.new()
+ add_child(premium_road)
+ premium_road.build(self, map_index)
 
 func at(index: int, lane: float = 0.0) -> Vector3:
  var i = posmod(index, SEGMENTS)
