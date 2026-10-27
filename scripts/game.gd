@@ -66,11 +66,12 @@ func _preview(index: int) -> void:
  if is_instance_valid(display_kart):
   display_kart.queue_free()
  display_kart = _spawn(index, Vector3(7.3, 0.55, 0), -0.33)
+ display_kart.scale = Vector3.ONE * 1.9
 
 func _menu_camera(weight: float) -> void:
- var p = Vector3(1.0, 5.0, 18.5)
+ var p = Vector3(1.0, 4.7, 14.0)
  camera.position = camera.position.lerp(p, weight)
- camera.look_at(Vector3(3.9, 1.3, 0.0), Vector3.UP)
+ camera.look_at(Vector3(4.5, 1.7, 0.0), Vector3.UP)
  camera.fov = lerpf(camera.fov, 58.0, weight)
 
 func _clear_race() -> void:
