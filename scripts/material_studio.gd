@@ -23,17 +23,26 @@ void vertex() {
  world_pos = (MODEL_MATRIX * vec4(VERTEX,1.0)).xyz;
 }
 void fragment() {
- float grain = surface_noise(world_pos.xz * 2.7);
- float broad = surface_noise(world_pos.xz * 0.18);
- float flakes = step(0.87, hash21(floor(world_pos.xz * 5.0)));
- vec3 base = mix(asphalt.rgb * 0.81, fleck.rgb, broad * 0.44);
- base += (grain - 0.5) * 0.080 + flakes * 0.040;
- float side = abs(UV.y - 0.5) * 2.0;
- float rubber = 1.0 - smoothstep(0.22, 0.48, abs(side-0.42));
- base *= 1.0 - rubber * 0.080;
- ALBEDO = base;
- ROUGHNESS = 0.82;
- SPECULAR = 0.18;
+ // Four distinct spatial frequencies: broad age variation, tar, gravel
+ // and sharp reflective aggregate. All detail remains crisp on 8x MSAA.
+ float broad = surface_noise(world_pos.xz * 0.13);
+ float age = surface_noise(world_pos.xz * 0.58);
+ float grain = surface_noise(world_pos.xz * 5.7);
+ float gravel = surface_noise(world_pos.xz * 22.0);
+ float aggregate = step(0.945, hash21(floor(world_pos.xz * 13.0)));
+ vec3 base = mix(asphalt.rgb * 0.73, fleck.rgb, broad * 0.38 + age * 0.18);
+ base += (grain - 0.5) * 0.087 + (gravel - 0.5) * 0.036 + aggregate * 0.07;
+ // Thin, soft tire-wear bands embedded in asphalt, not floating geometry.
+ float l = exp(-pow((UV.y - 0.28) * 34.0, 2.0));
+ float r = exp(-pow((UV.y - 0.72) * 34.0, 2.0));
+ float faded = surface_noise(world_pos.xz * 1.3);
+ float wear = (l + r) * (0.38 + faded * 0.36);
+ base = mix(base, base * 0.57, wear);
+ float seams = step(0.985, surface_noise(world_pos.xz * 0.27 + vec2(113.0,17.0)));
+ base *= 1.0 - seams * 0.10;
+ ALBEDO = max(base, vec3(0.015));
+ ROUGHNESS = 0.78 + gravel * 0.13;
+ SPECULAR = 0.14;
  EMISSION = base * glow_strength;
 }
 """
