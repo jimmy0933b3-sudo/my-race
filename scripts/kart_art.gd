@@ -141,7 +141,12 @@ func _wheels() -> void:
   var hub_side = signf(pivot.position.x)
   for side in [-1.0, 1.0]:
    var x = hub_side * (0.27 + (0.03 if side > 0.0 else 0.0))
-   var rim = _orb(Vector3(x, 0, 0), Vector3(0.043, 0.34, 0.34), graphite)
+   var rim_mesh = CylinderMesh.new()
+   rim_mesh.top_radius = 0.34
+   rim_mesh.bottom_radius = 0.34
+   rim_mesh.height = 0.06
+   rim_mesh.radial_segments = 16
+   var rim = _shape(rim_mesh, Vector3(x, 0, 0), graphite, 0.45, false, pivot)
    rim.rotation.z = PI / 2.0
    for spoke in range(6):
     var a = float(spoke) * TAU / 6.0
