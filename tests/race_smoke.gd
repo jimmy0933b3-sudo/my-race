@@ -43,6 +43,16 @@ func _run_tests() -> void:
   assert(game.circuit.map_index == map_index, "correct track geometry selected")
   assert(game.circuit.centers.size() == 180, "full traversable circuit")
   assert(game.circuit.premium_road.road != null, "painted asphalt mesh")
+  assert(game.circuit.fences != null and game.circuit.fences.fence_panels >= 1000, "continuous 3D safety barriers around the entire course")
+  assert(game.circuit.fences.post_count >= 100, "both sides have actual fence supports")
+  for side in [-1.0, 1.0]:
+   for at_index in [0, 24, 69, 115, 172]:
+    var far_out: Vector3 = game.circuit.at(at_index, side * 26.0)
+    var contact: Dictionary = game.circuit.constrain_position(far_out, 1.45)
+    assert(bool(contact["collided"]), "both outer and inner fences prevent escape")
+    var corrected: Vector3 = contact["position"]
+    var safety: Dictionary = game.circuit.constrain_position(corrected, 1.45)
+    assert(not bool(safety["collided"]), "fence correction brings car within the drivable corridor")
   assert(game.circuit.total_length > 250.0, "complete closed loop")
   if map_index == 0:
    assert(game.circuit.themed_landmarks == 4, "original monster park is retained")
@@ -54,6 +64,10 @@ func _run_tests() -> void:
  game._start_race()
  assert(not game.showroom.visible, "showroom hidden while racing")
  assert(game.opponents.size() == 7, "seven AI opponents")
+ assert(game.interface.race_minimap != null and game.interface.race_minimap.is_ready, "full circuit map initialized")
+ assert(game.interface.race_minimap.mapped_points.size() == 181, "minimap displays entire closed track")
+ assert(game.interface.race_minimap.racers.size() == 7, "minimap tracks each AI driver, plus player")
+ assert(game.interface.map_title.text.find("ORBITAL") >= 0, "race map title matches selected track")
  assert(game.player != null, "playable monster car")
  assert(game.pickups.size() == 16, "collectible items")
  for i in range(250):
@@ -87,11 +101,21 @@ func _run_tests() -> void:
  game.current_item = "BANANA"
  game._use_item()
  assert(game.hazards.size() == 1, "hazard drops")
+ # Drive the player directly toward the barrier and make sure physics prevents escape.
+ game.player.position = game.circuit.at(43, 22.0) + Vector3(0, 0.26, 0)
+ game.speed = 42.0
+ var crashes = game.wall_hits
+ game._physics_process(1.0 / 60.0)
+ assert(game.wall_hits > crashes, "hitting a wall triggers actual contact")
+ var fixed_contact: Dictionary = game.circuit.constrain_position(game.player.position, 1.45)
+ assert(not bool(fixed_contact["collided"]), "player cannot pass the fence")
+ assert(game.speed < 20.0, "wall impact slows down the kart")
+ assert(game.interface.race_minimap.racers.size() == 7, "all AI markers continue updating")
  game._finish()
  assert(game.race_state == "finished", "finish panel")
  game._return_to_menu()
  assert(game.race_state == "menu", "back to garage")
  assert(game.showroom.visible, "showroom restored on return")
- print("MONSTER KART SMOKE OK: 12 cars, 4 selectable 3D maps, detailed biomes, music, settings, pause, 7 AI, drift, items and finish")
+ print("MONSTER KART SMOKE OK: 12 cars, 4 tracks, continuous protective walls, 8 live minimap markers, bounce slowdown, music, settings and racing")
  game.queue_free()
  quit(0)
