@@ -1,10 +1,10 @@
 extends Node3D
 ## Mobile-first finishing pass: real atmospheric perspective, bloom, sharp edge
 ## anti-aliasing and batched fine foliage. Effects are scaled by quality preset.
-const MAX_DECORATIONS := 1680
+const MAX_DECORATIONS := 3150
 var circuit: Node3D
 var biome := 0
-var level := 1
+var level := 3
 var environment: Environment
 var sun: DirectionalLight3D
 var decoration: Array[MultiMeshInstance3D] = []
@@ -69,7 +69,7 @@ func _build_flora() -> void:
   mm.transform_format = MultiMesh.TRANSFORM_3D
   mm.use_colors = true
   mm.mesh = mesh
-  mm.instance_count = 560
+  mm.instance_count = 1050
   for i in range(560):
    var segment = rng.randf_range(0.0,float(circuit.SEGMENTS))
    var outward = rng.randf_range(12.4, 43.0)
@@ -140,11 +140,11 @@ func _cloud_ball(pos:Vector3,dims:Vector3,col:Color,glow:bool)->void:
  cloud_group.add_child(node)
 
 func set_quality(value:int)->void:
- level=clampi(value,0,2)
- var amounts=[0.12,0.62,1.0]
+ level=clampi(value,0,3)
+ var amounts=[0.12,0.48,0.78,1.0]
  for inst in decoration:
   if is_instance_valid(inst):
-   inst.multimesh.visible_instance_count=int(floor(560.0*amounts[level]))
+   inst.multimesh.visible_instance_count=int(floor(1050.0*amounts[level]))
  if cloud_group!=null:
   cloud_group.visible=level>0
  if environment != null:
@@ -155,15 +155,15 @@ func set_quality(value:int)->void:
   ][biome]
   environment.fog_sky_affect=0.17
   environment.fog_sun_scatter=0.14
-  environment.glow_enabled = level==2
-  environment.glow_intensity=0.68
-  environment.glow_bloom=0.07
+  environment.glow_enabled = level>=2
+  environment.glow_intensity=0.82 if level==3 else 0.58
+  environment.glow_bloom=0.11 if level==3 else 0.06
   environment.glow_hdr_threshold=1.12
   environment.adjustment_enabled=true
-  environment.adjustment_contrast=1.045 if level>0 else 1.0
-  environment.adjustment_saturation=1.075 if level>0 else 1.0
+  environment.adjustment_contrast=1.09 if level==3 else (1.045 if level>0 else 1.0)
+  environment.adjustment_saturation=1.10 if level==3 else (1.075 if level>0 else 1.0)
  if sun!=null:
   sun.shadow_enabled=level>0
-  sun.directional_shadow_max_distance=125.0
-  sun.shadow_blur=1.15 if level==2 else 0.78
+  sun.directional_shadow_max_distance=170.0 if level==3 else 125.0
+  sun.shadow_blur=1.45 if level==3 else (1.15 if level==2 else 0.78)
  atmosphere_ready=true
