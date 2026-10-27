@@ -3,6 +3,8 @@ extends Node3D
 const SCENERY_ART = preload("res://scripts/scenery_art.gd")
 const BIOME_WORLD = preload("res://scripts/biome_world.gd")
 const WORLD_OVERHAUL = preload("res://scripts/world_overhaul.gd")
+const BARRIER_ART = preload("res://scripts/track_barrier.gd")
+var fences
 var premium_road
 var map_index := 0
 var alternate_detail
@@ -43,6 +45,9 @@ func _ready() -> void:
  premium_road = WORLD_OVERHAUL.new()
  add_child(premium_road)
  premium_road.build(self, map_index)
+ fences = BARRIER_ART.new()
+ add_child(fences)
+ fences.build(self, map_index)
 
 func at(index: int, lane: float = 0.0) -> Vector3:
  var i = posmod(index, SEGMENTS)
@@ -70,6 +75,44 @@ func nearest_index(pos: Vector3) -> int:
    best = i
    best_d = d
  return best
+
+## Collides against the circuit's continuous boundary, even for cars moved by
+## hand-written arcade physics. The nearest segment is projected in 2D, avoiding
+## corner holes caused by clamping to individual route sample points.
+func constrain_position(candidate: Vector3, clearance: float = 1.45) -> Dictionary:
+ var near = nearest_index(candidate)
+ var p = Vector2(candidate.x, candidate.z)
+ var best_point = Vector2(centers[near].x, centers[near].z)
+ var best_sq := INF
+ var best_segment := near
+ for index in [posmod(near - 1, SEGMENTS), near]:
+  var a = Vector2(centers[index].x, centers[index].z)
+  var next: Vector3 = centers[(index + 1) % SEGMENTS]
+  var b = Vector2(next.x, next.z)
+  var edge = b - a
+  var factor = clampf((p - a).dot(edge) / maxf(edge.length_squared(), 0.00001), 0.0, 1.0)
+  var projected = a + edge * factor
+  var distance_sq = p.distance_squared_to(projected)
+  if distance_sq < best_sq:
+   best_sq = distance_sq
+   best_point = projected
+   best_segment = index
+ var gap = p - best_point
+ var dist = sqrt(best_sq)
+ var allowed = HALF_WIDTH - maxf(0.0, clearance)
+ var hit = dist > allowed
+ var normal = gap / dist if dist > 0.0001 else Vector2.ZERO
+ var inside = best_point + normal * minf(dist, allowed)
+ # Keep a small inward separation on impact to prevent repeated contact jitter.
+ if hit:
+  inside = best_point + normal * maxf(0.0, allowed - 0.12)
+ return {
+  "position": Vector3(inside.x, candidate.y, inside.y),
+  "normal": Vector3(normal.x, 0.0, normal.y),
+  "collided": hit,
+  "distance": dist,
+  "segment": best_segment
+ }
 
 func _mat(c: Color, rough := 0.8, glow := false) -> StandardMaterial3D:
  var key = "%s-%.2f-%s" % [c.to_html(), rough, str(glow)]
