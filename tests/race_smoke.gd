@@ -47,6 +47,7 @@ func _run_tests() -> void:
  assert(game.get_viewport().msaa_3d == Viewport.MSAA_2X, "balanced mode has twice-sampled edges")
  game.interface._close_settings()
  assert(game.interface.menu.visible, "settings return to garage")
+ print("[SMOKE] settings and core scene passed; inspect 12 high-res karts")
  for i in range(12):
   game._preview(i)
   assert(game.selected == i, "Monster selection must work")
@@ -55,7 +56,9 @@ func _run_tests() -> void:
   assert(game.display_kart.chassis_detail != null, "custom sculpted curved bodywork")
   assert(game.display_kart.premium_finish != null and game.display_kart.premium_finish.details >= 75, "all 12 premium cars have detailed alloy rims, glass and eye highlights")
  assert(game.interface.map_buttons.size() == 4, "four map choices must render in garage")
+ print("[SMOKE] kart sculpting passed; generate and inspect 4 racetracks")
  for map_index in range(4):
+  print("[SMOKE] building racetrack ",map_index)
   game.interface._select_map(map_index)
   await process_frame
   assert(game.selected_map == map_index, "selection reaches game controller")
@@ -83,6 +86,7 @@ func _run_tests() -> void:
    assert(game.circuit.alternate_detail.biome == map_index, "correct unique biome")
    assert(game.circuit.alternate_detail.landmark_count >= 24, "biome landmarks and billboards")
    assert(game.circuit.alternate_detail.scatter_count >= 800, "dense instanced decoration")
+ print("[SMOKE] all 4 racetrack tests passed; simulate full race")
  game._start_race()
  assert(not game.showroom.visible, "showroom hidden while racing")
  assert(game.opponents.size() == 7, "seven AI opponents")
