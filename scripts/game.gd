@@ -17,6 +17,7 @@ var pickups: Array[Dictionary] = []
 var hazards: Array[Dictionary] = []
 var race_state := "menu"
 var selected := 0
+var selected_map := 0
 var yaw := 0.0
 var speed := 0.0
 var heading_steer := 0.0
@@ -53,6 +54,7 @@ func _ready() -> void:
  interface.retry_race.connect(_start_race)
  interface.return_to_menu.connect(_return_to_menu)
  interface.selection_changed.connect(_preview)
+ interface.map_selection_changed.connect(_choose_map)
  interface.item_used.connect(_use_item)
  interface.pause_requested.connect(_pause_race)
  interface.resume_requested.connect(_resume_race)
@@ -60,6 +62,19 @@ func _ready() -> void:
  interface.sfx_volume_changed.connect(audio.set_sfx_level)
  interface.set_audio_levels(audio.music_level, audio.sfx_level)
  _preview(selected)
+ _menu_camera(1.0)
+
+func _choose_map(index: int) -> void:
+ selected_map = clampi(index, 0, 3)
+ if race_state != "menu":
+  return
+ if is_instance_valid(circuit):
+  remove_child(circuit)
+  circuit.queue_free()
+ circuit = Circuit.new()
+ circuit.name = ["MonsterFestivalTrack", "EmeraldGrasslandTrack", "GoldenDesertTrack", "OrbitalSpaceTrack"][selected_map]
+ circuit.map_index = selected_map
+ add_child(circuit)
  _menu_camera(1.0)
 
 func _spawn(index: int, at: Vector3, angle: float) -> Node3D:
