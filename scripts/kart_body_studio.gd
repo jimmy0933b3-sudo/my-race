@@ -40,6 +40,7 @@ func build(primary: Color, secondary: Color, variant: int) -> void:
  _accents(variant)
  _fenders()
  _exhaust()
+ _soft_ground_shadow()
 
 func _loft(rings: Array, material: Material) -> void:
  var tube = SurfaceTool.new()
@@ -204,3 +205,27 @@ func animate_body(dt:float,speed:float,drifting:bool) -> void:
   var flame=nacelles[i]
   flame.scale.z=0.14+clampf(speed/50.0,0.0,1.0)*0.22+(0.07 if drifting else 0.0)
   flame.visible=speed>4.0
+
+func _soft_ground_shadow() -> void:
+ # A soft radial contact shadow anchors the toy-like car to the tarmac.
+ # Shader transparency tapers smoothly, avoiding the old floating-car look.
+ var quad = PlaneMesh.new()
+ quad.size = Vector2(3.4, 4.65)
+ var shader = Shader.new()
+ shader.code = """shader_type spatial;
+render_mode unshaded, cull_disabled, depth_draw_never, blend_mix;
+void fragment() {
+ vec2 d = (UV - vec2(0.5)) * vec2(2.0, 2.0);
+ float fade = 1.0 - smoothstep(0.31, 1.0, length(d));
+ ALBEDO = vec3(0.065, 0.08, 0.14);
+ ALPHA = fade * 0.34;
+}
+"""
+ var material = ShaderMaterial.new()
+ material.shader = shader
+ var shadow = MeshInstance3D.new()
+ shadow.name = "SoftContactShadow"
+ shadow.mesh = quad
+ shadow.material_override = material
+ shadow.position = Vector3(0.0, -0.17, 0.10)
+ add_child(shadow)
