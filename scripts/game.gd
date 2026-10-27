@@ -4,11 +4,11 @@ const Kart = preload("res://scripts/monster_kart.gd")
 const Circuit = preload("res://scripts/track.gd")
 const RaceUI = preload("res://scripts/race_ui.gd")
 const LAPS = 3
-var circuit: Node3D
+var circuit
 var camera: Camera3D
-var interface: CanvasLayer
-var display_kart: Node3D
-var player: Node3D
+var interface
+var display_kart
+var player
 var opponents: Array[Dictionary] = []
 var pickups: Array[Dictionary] = []
 var hazards: Array[Dictionary] = []
@@ -241,7 +241,7 @@ func _update_ai(dt: float) -> void:
  var seg_len = circuit.total_length / float(Circuit.SEGMENTS)
  for bot in opponents:
   var stun: float = bot["stun"]
-  var car: Node3D = bot["car"]
+  var car = bot["car"]
   stun = maxf(0.0, stun - dt)
   bot["stun"] = stun
   var pace: float = bot["speed"] * (0.26 if stun > 0.0 else 1.0)
