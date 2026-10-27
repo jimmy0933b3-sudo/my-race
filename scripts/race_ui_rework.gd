@@ -1,6 +1,10 @@
 extends "res://scripts/race_ui.gd"
 ## Complete skin/layout rebuild with one cohesive graphic identity.
 ## Inherits battle controls and signals from the tested UI interface.
+signal quality_changed(level: int)
+var quality_level := 1
+var quality_buttons: Array[Button] = []
+var quality_description: Label
 const BADGE = preload("res://scripts/garage_badge.gd")
 const LIVE_MAP = preload("res://scripts/race_minimap.gd")
 var race_minimap
@@ -206,14 +210,14 @@ func _make_settings() -> void:
  settings.mouse_filter=Control.MOUSE_FILTER_IGNORE
  main.add_child(settings)
  _panel(settings,Vector2.ZERO,Vector2(1280,720),Color("#0b142be1"))
- _glow_panel(settings,Vector2(321,81),Vector2(638,563),PALETTE["pink"],Color("#172743fa"),32)
- _text(settings,"SETTINGS  /  AUDIO",Vector2(363,106),Vector2(550,53),26,PALETTE["mint"],true)
- _text(settings,"⚙ 遊戲設定",Vector2(365,171),Vector2(548,55),39,PALETTE["paper"],true)
- _glow_panel(settings,Vector2(367,255),Vector2(544,247),PALETTE["mint"],Color("#263955"),18)
- music_value=_text(settings,"背景配樂 60%",Vector2(400,271),Vector2(460,38),23,PALETTE["paper"])
+ _glow_panel(settings,Vector2(319,37),Vector2(644,654),PALETTE["pink"],Color("#172743fa"),32)
+ _text(settings,"SETTINGS  /  AUDIO + GRAPHICS",Vector2(356,59),Vector2(565,45),23,PALETTE["mint"],true)
+ _text(settings,"⚙ 遊戲設定",Vector2(365,111),Vector2(546,51),36,PALETTE["paper"],true)
+ _glow_panel(settings,Vector2(366,186),Vector2(548,271),PALETTE["mint"],Color("#263955"),18)
+ music_value=_text(settings,"背景配樂 60%",Vector2(393,202),Vector2(470,36),22,PALETTE["paper"])
  music_slider=HSlider.new()
- music_slider.position=Vector2(410,320)
- music_slider.size=Vector2(457,34)
+ music_slider.position=Vector2(408,243)
+ music_slider.size=Vector2(460,34)
  music_slider.min_value=0
  music_slider.max_value=1
  music_slider.step=0.05
@@ -222,10 +226,10 @@ func _make_settings() -> void:
  music_slider.value_changed.connect(func(v:float):
   music_value.text="背景配樂  %d%%" % roundi(v*100.0)
   music_volume_changed.emit(v))
- sfx_value=_text(settings,"遊戲音效 75%",Vector2(400,385),Vector2(460,35),23,PALETTE["paper"])
+ sfx_value=_text(settings,"遊戲音效 75%",Vector2(393,320),Vector2(470,36),22,PALETTE["paper"])
  sfx_slider=HSlider.new()
- sfx_slider.position=Vector2(410,433)
- sfx_slider.size=Vector2(457,34)
+ sfx_slider.position=Vector2(408,367)
+ sfx_slider.size=Vector2(460,34)
  sfx_slider.min_value=0
  sfx_slider.max_value=1
  sfx_slider.step=0.05
@@ -234,6 +238,31 @@ func _make_settings() -> void:
  sfx_slider.value_changed.connect(func(v:float):
   sfx_value.text="遊戲音效  %d%%" % roundi(v*100.0)
   sfx_volume_changed.emit(v))
- _small_label(settings,"自動加速  /  左右轉向  /  按住甩尾  /  使用道具",Vector2(385,522),540)
- var back=_button(settings,"儲存並返回",Vector2(401,565),Vector2(477,64),Color("#3bab9d"),26)
+ _text(settings,"畫質  /  GRAPHICS",Vector2(388,470),Vector2(509,33),22,PALETTE["gold"])
+ var names = ["省電", "標準", "精緻"]
+ for i in range(3):
+  var button=_button(settings,names[i],Vector2(386+i*169,510),Vector2(158,49),Color("#426182"),20)
+  button.pressed.connect(_select_quality.bind(i))
+  quality_buttons.append(button)
+ quality_description=_text(settings,"",Vector2(378,570),Vector2(528,29),17,PALETTE["muted"],true)
+ set_quality_level(quality_level,false)
+ var back=_button(settings,"儲存並返回",Vector2(395,609),Vector2(487,66),Color("#3bab9d"),26)
  back.pressed.connect(_close_settings)
+
+func set_quality_level(value: int, notify: bool = false) -> void:
+ quality_level=clampi(value,0,2)
+ var descriptions = [
+  "省電：關閉額外光影和抗鋸齒，低功耗遊玩",
+  "標準：2× 平滑邊緣、柔和光影、較豐富場景",
+  "精緻：4× 抗鋸齒、環境泛光、完整植被細節"
+ ]
+ if quality_description!=null:
+  quality_description.text=descriptions[quality_level]
+ for i in range(quality_buttons.size()):
+  var selected = i==quality_level
+  quality_buttons[i].add_theme_stylebox_override("normal",_style(Color("#489f9c") if selected else Color("#314762"),Color("#ffe4a2") if selected else Color("#71829b"),3 if selected else 1,14))
+ if notify:
+  quality_changed.emit(quality_level)
+
+func _select_quality(level: int) -> void:
+ set_quality_level(level,true)
