@@ -20,7 +20,7 @@ var hazards: Array[Dictionary] = []
 var race_state := "menu"
 var selected := 0
 var selected_map := 0
-var graphics_quality := 1
+var graphics_quality := 3
 var yaw := 0.0
 var speed := 0.0
 var heading_steer := 0.0
@@ -44,7 +44,7 @@ func _ready() -> void:
  rng.seed = 19432
  var saved_settings = ConfigFile.new()
  if saved_settings.load("user://monsterkart_settings.cfg") == OK:
-  graphics_quality = clampi(int(saved_settings.get_value("graphics", "quality", 1)), 0, 2)
+  graphics_quality = clampi(int(saved_settings.get_value("graphics", "quality_ultra", 3)), 0, 3)
  audio = ArcadeAudio.new()
  audio.name = "MusicAndEffects"
  add_child(audio)
@@ -92,10 +92,10 @@ func _choose_map(index: int) -> void:
  _menu_camera(1.0)
 
 func _set_graphics_quality(value: int) -> void:
- graphics_quality = clampi(value, 0, 2)
+ graphics_quality = clampi(value, 0, 3)
  _apply_graphics_quality()
  var saved_settings = ConfigFile.new()
- saved_settings.set_value("graphics", "quality", graphics_quality)
+ saved_settings.set_value("graphics", "quality_ultra", graphics_quality)
  saved_settings.save("user://monsterkart_settings.cfg")
 
 func _apply_graphics_quality() -> void:
@@ -108,6 +108,8 @@ func _apply_graphics_quality() -> void:
    get_viewport().msaa_3d = Viewport.MSAA_2X
   2:
    get_viewport().msaa_3d = Viewport.MSAA_4X
+  3:
+   get_viewport().msaa_3d = Viewport.MSAA_8X
  get_viewport().use_debanding = graphics_quality > 0
  if is_instance_valid(circuit) and circuit.visual_polish != null:
   circuit.visual_polish.set_quality(graphics_quality)
