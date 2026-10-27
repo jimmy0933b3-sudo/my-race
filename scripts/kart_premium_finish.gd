@@ -32,7 +32,6 @@ func _material(color: Color, metallic := 0.0, rough := 0.25, glow := false, alph
  mat.albedo_color = Color(color.r, color.g, color.b, alpha)
  mat.metallic = metallic
  mat.roughness = rough
- mat.specular_mode = BaseMaterial3D.SPECULAR_SCHLICK_GGX
  mat.clearcoat_enabled = metallic > 0.05 or rough < 0.24
  mat.clearcoat = 0.94
  mat.clearcoat_roughness = 0.08
@@ -165,6 +164,8 @@ void fragment() {
  var tire_mat = ShaderMaterial.new()
  tire_mat.shader = tread_shader
  for pivot in wheel_parts:
+  if pivot.get_child_count() > 0 and pivot.get_child(0) is MeshInstance3D:
+   (pivot.get_child(0) as MeshInstance3D).material_override = tire_mat
   var side = signf(pivot.position.x)
   var rim_side=side*0.295
   # Tyre tread ring rotates with original wheel pivot.
