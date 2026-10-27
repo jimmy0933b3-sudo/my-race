@@ -240,7 +240,7 @@ func _make_settings() -> void:
   sfx_volume_changed.emit(v))
  _text(settings,"畫質  /  GRAPHICS",Vector2(388,470),Vector2(509,33),22,PALETTE["gold"])
  var names = ["省電", "標準", "精緻", "極致"]
- for i in range(3):
+ for i in range(names.size()):
   var button=_button(settings,names[i],Vector2(386+i*132,510),Vector2(122,49),Color("#426182"),20)
   button.pressed.connect(_select_quality.bind(i))
   quality_buttons.append(button)
