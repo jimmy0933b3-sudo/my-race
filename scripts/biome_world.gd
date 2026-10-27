@@ -397,7 +397,7 @@ func _small_details() -> void:
     _sphere(p + Vector3(0, 2.16, 0), Vector3.ONE * 0.36, colors[2], true)
   var p2: Vector3 = course.sample(ix + 3.0)
   if biome == 3 and i % 14 == 0:
-   var oval = _ring(p2 + Vector3(0, 0.22, 0), 2.6, colors[2], PI / 2.0, true)
+   _ring(p2 + Vector3(0, 0.22, 0), 2.6, colors[2], PI / 2.0, true)
 
 func _scatter() -> void:
  # Four draw calls / biome. Per-instance colors for meadow flowers, dunes and stars.
