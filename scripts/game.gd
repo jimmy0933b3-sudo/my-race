@@ -30,6 +30,7 @@ var boost_time := 0.0
 var shield_time := 0.0
 var bump_wait := 0.0
 var wall_hits := 0
+var wall_slide_time := 0.0
 var race_time := 0.0
 var count_time := 3.4
 var current_item := ""
@@ -173,6 +174,7 @@ func _start_race() -> void:
  shield_time = 0.0
  bump_wait = 0.0
  wall_hits = 0
+ wall_slide_time = 0.0
  current_item = ""
  race_time = 0.0
  player_lap = 1
@@ -262,6 +264,7 @@ func _physics_process(dt: float) -> void:
  boost_time = maxf(0.0, boost_time - dt)
  shield_time = maxf(0.0, shield_time - dt)
  bump_wait = maxf(0.0, bump_wait - dt)
+ wall_slide_time = maxf(0.0, wall_slide_time - dt)
  _update_player(dt)
  _update_ai(dt)
  _update_items(dt)
@@ -283,10 +286,10 @@ func _update_player(dt: float) -> void:
  var chosen_stats = Kart.ROSTER[selected]
  var max_speed = 35.0 + float(chosen_stats["speed"]) * 1.6
  if offroad:
-  max_speed *= 0.61
+  max_speed *= 0.96
  if boost_time > 0.0:
   max_speed += 17.0
- var acceleration = 15.0 if offroad else 21.0
+ var acceleration = 23.0 if offroad else 21.0
  speed = move_toward(speed, max_speed, dt * acceleration)
  var turning = 0.87 + float(chosen_stats["grip"]) * 0.09
  var turn_power = turning * (0.60 + clampf(speed / 34.0, 0.0, 1.0))
@@ -314,16 +317,28 @@ func _update_player(dt: float) -> void:
  if bool(contact["collided"]):
   wall_hits += 1
   var outward: Vector3 = contact["normal"]
-  var into_wall = forward.dot(outward)
+  var into_wall: float = forward.dot(outward)
   if into_wall > 0.0:
-   var reflected = (forward - outward * 2.0 * into_wall).normalized()
-   yaw = _angle_for(reflected)
-  speed = minf(speed * 0.48, 15.0)
-  boost_time = minf(boost_time, 0.35)
+   # Wall-grinding arcade driving: discard only movement aimed into
+   # the barrier, preserve tangential momentum, gently rotate along it.
+   # Unlike a reflected bounce, the car always keeps driving forward.
+   var slide: Vector3 = forward - outward * into_wall
+   if slide.length_squared() < 0.09:
+    slide = circuit.direction(float(contact["segment"]))
+    if slide.dot(forward) < -0.25:
+     slide = -slide
+   slide = slide.normalized()
+   var steering_blend = 0.62 if slide.dot(forward) < 0.55 else 0.43
+   yaw = lerp_angle(yaw, _angle_for(slide), steering_blend)
+  # Only apply a light speed penalty on INITIAL impact, never every frame.
+  # A scrape along the rail should feel like steering, not an invisible brake.
+  if wall_slide_time <= 0.0:
+   speed *= 0.93
+   wall_slide_time = 0.25
   if bump_wait <= 0.0:
    _flash(player.position + Vector3(0, 0.75, 0), Color("#ffdb9f"))
    audio.play_cue("hit")
-   bump_wait = 0.44
+   bump_wait = 0.50
  player.rotation.y = yaw
  player.animate_kart(dt, speed, active_drift)
  var index = circuit.nearest_index(player.position)
