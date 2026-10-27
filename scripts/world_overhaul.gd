@@ -93,9 +93,10 @@ func _road() -> void:
    p1.y = 0.102
    p2.y = 0.102
    p3.y = 0.102
-   var vertices = [p0,p2,p1,p1,p2,p3]
-   var uvs = [Vector2(along/3.0,u0),Vector2((along+advance)/3.0,u0),Vector2(along/3.0,u1),
-    Vector2(along/3.0,u1),Vector2((along+advance)/3.0,u0),Vector2((along+advance)/3.0,u1)]
+   # Upward-facing triangles: correct physical lighting and consistent paint.
+   var vertices = [p0,p1,p2,p1,p3,p2]
+   var uvs = [Vector2(along/3.0,u0),Vector2(along/3.0,u1),Vector2((along+advance)/3.0,u0),
+    Vector2(along/3.0,u1),Vector2((along+advance)/3.0,u1),Vector2((along+advance)/3.0,u0)]
    for j in range(6):
     tool.set_uv(uvs[j])
     tool.add_vertex(vertices[j])
