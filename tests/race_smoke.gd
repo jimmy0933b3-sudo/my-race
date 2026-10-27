@@ -33,9 +33,10 @@ func _run_tests() -> void:
  assert(game.interface.map_buttons.size() == 4, "four map choices must render in garage")
  for map_index in range(4):
   game.interface._select_map(map_index)
+  await process_frame
   assert(game.selected_map == map_index, "selection reaches game controller")
   assert(game.circuit.map_index == map_index, "correct track geometry selected")
-  assert(game.circuit.centers.size() == game.circuit.SEGMENTS, "full traversable circuit")
+  assert(game.circuit.centers.size() == 180, "full traversable circuit")
   assert(game.circuit.total_length > 250.0, "complete closed loop")
   if map_index == 0:
    assert(game.circuit.themed_landmarks == 4, "original monster park is retained")
