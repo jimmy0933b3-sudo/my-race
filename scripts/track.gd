@@ -1,5 +1,7 @@
 extends Node3D
 ## Fantasy circuit constructed entirely from mobile-friendly 3D meshes.
+const SCENERY_ART = preload("res://scripts/scenery_art.gd")
+var scenery_detail
 const SEGMENTS = 180
 const HALF_WIDTH = 8.6
 var centers: Array[Vector3] = []
@@ -221,6 +223,9 @@ func _build_world() -> void:
  _box(Vector3(0, 0.1, 0), Vector3(12, 0.35, 12), Color("#f9d992"))
  _box(Vector3(0, 0.46, 0), Vector3(7.6, 0.42, 7.6), Color("#ff99b8"))
  _add_theme_park()
+ scenery_detail = SCENERY_ART.new()
+ add_child(scenery_detail)
+ scenery_detail.decorate(self)
 
 func _tree(p: Vector3, size: float) -> void:
  _box(p + Vector3(0, size * 1.4, 0), Vector3(size * 0.6, size * 2.8, size * 0.6), Color("#9b795e"))
