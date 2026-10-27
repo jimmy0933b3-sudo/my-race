@@ -1,6 +1,11 @@
 extends SceneTree
 ## CI regression: exercise monster selection, race startup, physics, item use and finish.
 func _initialize() -> void:
+ var watchdog = create_timer(70.0, true, false)
+ watchdog.timeout.connect(func():
+  push_error("Regression watchdog: test aborted before successful completion")
+  quit(1)
+ )
  call_deferred("_run_tests")
 
 func _run_tests() -> void:
