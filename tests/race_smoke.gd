@@ -16,6 +16,9 @@ func _run_tests() -> void:
  assert(game.interface.settings != null, "settings screen")
  assert(game.interface.pause_page != null, "pause screen")
  assert(game.circuit.themed_landmarks == 4, "four decorated track zones")
+ assert(game.circuit.scenery_detail != null, "detailed world is mounted")
+ assert(game.circuit.scenery_detail.landmark_count >= 75, "rich district buildings and track signs")
+ assert(game.circuit.scenery_detail.plant_instances >= 800, "instanced grass and magical flowers")
  assert(game.audio.music_player.stream != null, "original music stream")
  assert(game.audio.cues.has("finish"), "race sound effects")
  game.interface._open_settings("menu")
@@ -25,6 +28,8 @@ func _run_tests() -> void:
  for i in range(12):
   game._preview(i)
   assert(game.selected == i, "Monster selection must work")
+  assert(game.display_kart.art_detail != null, "monster art component")
+  assert(game.display_kart.art_detail.detail_count >= 40, "detailed car sculpting")
  game._start_race()
  assert(game.opponents.size() == 7, "seven AI opponents")
  assert(game.player != null, "playable monster car")
