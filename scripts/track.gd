@@ -106,7 +106,7 @@ func _ribbon(half_width: float, y: float, color: Color) -> void:
   b.y = y
   c.y = y
   d.y = y
-  for p in [a, c, b, b, c, d]:
+  for p in [a, b, c, b, d, c]:
    tool.add_vertex(p)
  tool.generate_normals()
  var road = MeshInstance3D.new()
