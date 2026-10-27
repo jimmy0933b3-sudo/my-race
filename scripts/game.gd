@@ -20,6 +20,7 @@ var hazards: Array[Dictionary] = []
 var race_state := "menu"
 var selected := 0
 var selected_map := 0
+var graphics_quality := 1
 var yaw := 0.0
 var speed := 0.0
 var heading_steer := 0.0
@@ -40,6 +41,9 @@ var effect_nodes: Array[Dictionary] = []
 
 func _ready() -> void:
  rng.seed = 19432
+ var saved_settings = ConfigFile.new()
+ if saved_settings.load("user://monsterkart_settings.cfg") == OK:
+  graphics_quality = clampi(int(saved_settings.get_value("graphics", "quality", 1)), 0, 2)
  audio = ArcadeAudio.new()
  audio.name = "MusicAndEffects"
  add_child(audio)
@@ -65,6 +69,9 @@ func _ready() -> void:
  interface.resume_requested.connect(_resume_race)
  interface.music_volume_changed.connect(audio.set_music_level)
  interface.sfx_volume_changed.connect(audio.set_sfx_level)
+ interface.quality_changed.connect(_set_graphics_quality)
+ interface.set_quality_level(graphics_quality, false)
+ _apply_graphics_quality()
  interface.set_audio_levels(audio.music_level, audio.sfx_level)
  _preview(selected)
  _menu_camera(1.0)
@@ -80,7 +87,29 @@ func _choose_map(index: int) -> void:
  circuit.name = ["MonsterFestivalTrack", "EmeraldGrasslandTrack", "GoldenDesertTrack", "OrbitalSpaceTrack"][selected_map]
  circuit.map_index = selected_map
  add_child(circuit)
+ _apply_graphics_quality()
  _menu_camera(1.0)
+
+func _set_graphics_quality(value: int) -> void:
+ graphics_quality = clampi(value, 0, 2)
+ _apply_graphics_quality()
+ var saved_settings = ConfigFile.new()
+ saved_settings.set_value("graphics", "quality", graphics_quality)
+ saved_settings.save("user://monsterkart_settings.cfg")
+
+func _apply_graphics_quality() -> void:
+ # Compatibility renderer supports real MSAA edge smoothing, unlike TAA/FXAA.
+ # Change the active viewport rather than only changing a decorative UI label.
+ match graphics_quality:
+  0:
+   get_viewport().msaa_3d = Viewport.MSAA_DISABLED
+  1:
+   get_viewport().msaa_3d = Viewport.MSAA_2X
+  2:
+   get_viewport().msaa_3d = Viewport.MSAA_4X
+ get_viewport().use_debanding = graphics_quality > 0
+ if is_instance_valid(circuit) and circuit.visual_polish != null:
+  circuit.visual_polish.set_quality(graphics_quality)
 
 func _spawn(index: int, at: Vector3, angle: float) -> Node3D:
  var car = Kart.new()
