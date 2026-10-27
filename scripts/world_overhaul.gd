@@ -43,9 +43,16 @@ func _terrain() -> void:
   for x in range(grid + 1):
    var px = (float(x) / float(grid) * 2.0 - 1.0) * extent
    var pz = (float(z) / float(grid) * 2.0 - 1.0) * extent
-   var nearest = track.nearest_index(Vector3(px,0,pz))
-   var closest: Vector3 = track.centers[nearest]
-   var edge_dist = Vector2(px-closest.x,pz-closest.z).length()
+   # Nearby angular samples approximate the closest track without a
+   # full 180-point search per vertex (saves millions of GDScript loops).
+   var angle = fposmod(atan2(pz/50.0,px/65.0),TAU)
+   var candidate = roundi(angle * float(track.SEGMENTS) / TAU)
+   var best_sq: float = INF
+   for delta in range(-14,15):
+    var cpoint: Vector3 = track.centers[posmod(candidate+delta,track.SEGMENTS)]
+    var dist_sq = (px-cpoint.x)*(px-cpoint.x)+(pz-cpoint.z)*(pz-cpoint.z)
+    best_sq = minf(best_sq,dist_sq)
+   var edge_dist = sqrt(best_sq)
    var blend = smoothstep(12.5,41.0,edge_dist)
    var wave = noise.get_noise_2d(px,pz)
    var fine = noise.get_noise_2d(px*2.4+41.0,pz*2.4) * 1.4
