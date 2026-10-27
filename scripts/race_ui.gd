@@ -2,6 +2,7 @@ extends CanvasLayer
 ## Landscape-first, touch-safe responsive HUD. All buttons also work with a mouse.
 signal start_race
 signal selection_changed(index: int)
+signal map_selection_changed(index: int)
 signal retry_race
 signal return_to_menu
 signal item_used
@@ -12,6 +13,9 @@ signal sfx_volume_changed(value: float)
 
 const KART = preload("res://scripts/monster_kart.gd")
 var chosen := 0
+var map_chosen := 0
+var map_buttons: Array[Button] = []
+var map_info: Label
 var left_held := false
 var right_held := false
 var drift_held := false
@@ -125,8 +129,19 @@ func _make_menu() -> void:
  selection_stats = _text(menu, "", Vector2(75, 533), Vector2(472, 31), 19, Color("#c2f5f0"))
  var start = _button(menu, "🏁  開始怪獸大賽", Vector2(54, 586), Vector2(536, 77), Color("#ef617a"), 29)
  start.pressed.connect(func(): start_race.emit())
- _text(menu, "DRIFT · BOOST · BATTLE", Vector2(682, 561), Vector2(544, 52), 23, Color("#ffffff"), true)
- _text(menu, "自動加速  ·  左右轉向  ·  按住甩尾  ·  道具攻擊", Vector2(657, 609), Vector2(592, 45), 19, Color("#e9f7ff"), true)
+ _text(menu, "選擇你的冒險賽道", Vector2(678, 361), Vector2(510, 43), 25, Color("#ffffff"), true)
+ var maps = ["🎡  怪獸樂園", "🌿  翠綠草原", "🏜  黃金沙漠", "🪐  星環太空"]
+ for i in range(4):
+  var cx: int = i % 2
+  var cy: int = i / 2
+  var p = Vector2(668 + cx * 277, 413 + cy * 64)
+  var btn = _button(menu, maps[i], p, Vector2(263, 57), Color("#456487"), 21)
+  btn.pressed.connect(_select_map.bind(i))
+  map_buttons.append(btn)
+ map_info = _text(menu, "", Vector2(661, 546), Vector2(567, 41), 18, Color("#fff1ba"), true)
+ _select_map(0)
+ _text(menu, "DRIFT · BOOST · BATTLE", Vector2(682, 587), Vector2(544, 42), 22, Color("#ffffff"), true)
+ _text(menu, "自動加速  ·  左右轉向  ·  按住甩尾  ·  道具攻擊", Vector2(657, 630), Vector2(592, 42), 19, Color("#e9f7ff"), true)
  _select(0)
 
 func _select(index: int) -> void:
@@ -139,6 +154,15 @@ func _select(index: int) -> void:
  selection_name.text = str(data["name"]) + "  ·  " + str(data["eng"])
  selection_stats.text = "極速 " + "★".repeat(int(data["speed"])) + "   操控 " + "★".repeat(int(data["grip"]))
  selection_changed.emit(chosen)
+
+func _select_map(index: int) -> void:
+ map_chosen = clampi(index, 0, 3)
+ var descriptions = ["四大主題魔法樂園 · 夢幻飄浮城堡", "風車牧場 · 花海綠丘 · 森林小屋", "金色沙丘 · 仙人掌 · 古代神殿", "行星星環 · 太空基地 · 銀河賽道"]
+ for i in range(map_buttons.size()):
+  var color = [Color("#f784b3"), Color("#4ab98f"), Color("#dca46b"), Color("#8175d0")][i]
+  map_buttons[i].add_theme_stylebox_override("normal", _style(color if i == map_chosen else color.darkened(0.48), Color("#fff2c4") if i == map_chosen else Color("#ffffff40"), 3 if i == map_chosen else 1, 16))
+ map_info.text = descriptions[map_chosen]
+ map_selection_changed.emit(map_chosen)
 
 func _make_hud() -> void:
  hud = Control.new()
