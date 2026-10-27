@@ -5,6 +5,10 @@ signal selection_changed(index: int)
 signal retry_race
 signal return_to_menu
 signal item_used
+signal pause_requested
+signal resume_requested
+signal music_volume_changed(value: float)
+signal sfx_volume_changed(value: float)
 
 const KART = preload("res://scripts/monster_kart.gd")
 var chosen := 0
@@ -15,6 +19,13 @@ var main: Control
 var menu: Control
 var hud: Control
 var result: Control
+var pause_page: Control
+var settings: Control
+var settings_origin := "menu"
+var music_slider: HSlider
+var sfx_slider: HSlider
+var music_value: Label
+var sfx_value: Label
 var selection_buttons: Array[Button] = []
 var selection_name: Label
 var selection_stats: Label
@@ -35,6 +46,8 @@ func _ready() -> void:
  _make_menu()
  _make_hud()
  _make_result()
+ _make_pause()
+ _make_settings()
  show_menu()
 
 func _style(bg: Color, edge: Color = Color("#ffffff"), width: int = 0, rad: int = 18) -> StyleBoxFlat:
@@ -95,7 +108,9 @@ func _make_menu() -> void:
  var bg = _panel(menu, Vector2(27, 25), Vector2(590, 668), Color("#17233aeb"), Color("#b5ddff66"), 28)
  _text(menu, "MONSTER KART", Vector2(56, 42), Vector2(522, 55), 43, Color("#ffdb82"))
  _text(menu, "怪獸甩尾盃  ·  3D", Vector2(58, 95), Vector2(486, 42), 25, Color("#b5e9ff"))
- _text(menu, "挑選你的怪獸座駕", Vector2(59, 144), Vector2(420, 40), 21, Color("#eff3ff"))
+ _text(menu, "挑選你的怪獸座駕", Vector2(59, 144), Vector2(380, 40), 21, Color("#eff3ff"))
+ var settings_button = _button(menu, "⚙ 設定", Vector2(456, 140), Vector2(134, 43), Color("#365d88"), 19)
+ settings_button.pressed.connect(func(): _open_settings("menu"))
  for i in range(12):
   var row = i / 4
   var col = i % 4
@@ -137,6 +152,10 @@ func _make_hud() -> void:
  speed_label = _text(hud, "0 KM/H", Vector2(1014, 34), Vector2(228, 50), 32, Color("#ffe795"), true)
  time_label = _text(hud, "00:00", Vector2(1026, 84), Vector2(200, 31), 19, Color("#d2faff"), true)
  countdown_label = _text(hud, "", Vector2(410, 112), Vector2(460, 160), 80, Color("#fff5b4"), true)
+ var pause_button = _button(hud, "Ⅱ  暫停", Vector2(483, 24), Vector2(150, 68), Color("#435d8aeb"), 23)
+ pause_button.pressed.connect(func(): pause_requested.emit())
+ var home_button = _button(hud, "⌂  首頁", Vector2(646, 24), Vector2(150, 68), Color("#435d8aeb"), 23)
+ home_button.pressed.connect(func(): return_to_menu.emit())
  var left = _button(hud, "◀", Vector2(28, 556), Vector2(136, 133), Color("#344d79d9"), 55)
  var right = _button(hud, "▶", Vector2(175, 556), Vector2(136, 133), Color("#344d79d9"), 55)
  left.button_down.connect(func(): left_held = true)
@@ -174,23 +193,132 @@ func _make_result() -> void:
  var home = _button(result, "選擇怪獸", Vector2(654, 437), Vector2(240, 94), Color("#456a96"), 27)
  retry.pressed.connect(func(): retry_race.emit())
  home.pressed.connect(func(): return_to_menu.emit())
+ var result_settings = _button(result, "⚙ 音效設定", Vector2(542, 541), Vector2(200, 43), Color("#406386"), 19)
+ result_settings.pressed.connect(func(): _open_settings("result"))
 
 func show_menu() -> void:
  menu.visible = true
  hud.visible = false
  result.visible = false
- left_held = false
- right_held = false
- drift_held = false
+ pause_page.visible = false
+ settings.visible = false
+ _release_controls()
+
 
 func show_race() -> void:
  menu.visible = false
  hud.visible = true
  result.visible = false
+ pause_page.visible = false
+ settings.visible = false
 
 func show_result(rank: int, time: float) -> void:
  menu.visible = false
  hud.visible = false
+ pause_page.visible = false
+ settings.visible = false
+ _release_controls()
  result.visible = true
  finish_label.text = "第 %d 名！" % rank
  finish_time.text = "完成時間  %02d:%02d" % [int(time) / 60, int(time) % 60]
+
+func _release_controls() -> void:
+ left_held = false
+ right_held = false
+ drift_held = false
+
+func _make_pause() -> void:
+ pause_page = Control.new()
+ pause_page.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+ pause_page.mouse_filter = Control.MOUSE_FILTER_IGNORE
+ main.add_child(pause_page)
+ _panel(pause_page, Vector2.ZERO, Vector2(1280, 720), Color("#091426bf"))
+ _panel(pause_page, Vector2(347, 94), Vector2(586, 540), Color("#1a2946f5"), Color("#b8ebff99"), 30)
+ _text(pause_page, "Ⅱ  比賽暫停", Vector2(390, 117), Vector2(500, 75), 43, Color("#ffdf91"), true)
+ _text(pause_page, "休息一下，怪獸會等你！", Vector2(397, 195), Vector2(484, 49), 22, Color("#c5ecfa"), true)
+ var resume_button = _button(pause_page, "▶  繼續比賽", Vector2(395, 260), Vector2(486, 73), Color("#42a785"), 29)
+ resume_button.pressed.connect(func(): resume_requested.emit())
+ var retry_button = _button(pause_page, "⟲  重新開始", Vector2(395, 346), Vector2(232, 74), Color("#ce6788"), 23)
+ retry_button.pressed.connect(func(): retry_race.emit())
+ var options_button = _button(pause_page, "⚙  設定", Vector2(647, 346), Vector2(234, 74), Color("#496d9d"), 24)
+ options_button.pressed.connect(func(): _open_settings("pause"))
+ var home_button = _button(pause_page, "⌂  回首頁選車", Vector2(395, 437), Vector2(486, 77), Color("#3b526f"), 25)
+ home_button.pressed.connect(func(): return_to_menu.emit())
+ _text(pause_page, "手機觸控或按 ESC 都能繼續", Vector2(390, 547), Vector2(498, 42), 18, Color("#b4c9df"), true)
+
+func _make_settings() -> void:
+ settings = Control.new()
+ settings.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+ settings.mouse_filter = Control.MOUSE_FILTER_IGNORE
+ main.add_child(settings)
+ _panel(settings, Vector2.ZERO, Vector2(1280, 720), Color("#081021dd"))
+ _panel(settings, Vector2(313, 68), Vector2(654, 587), Color("#192943f7"), Color("#b4eaffaa"), 28)
+ _text(settings, "⚙  遊戲設定", Vector2(353, 99), Vector2(574, 68), 42, Color("#ffe3a2"), true)
+ _text(settings, "聲音與操控", Vector2(361, 167), Vector2(558, 35), 21, Color("#c0eafe"), true)
+ _panel(settings, Vector2(350, 225), Vector2(580, 267), Color("#283b59e6"), Color("#ffffff33"), 18)
+ music_value = _text(settings, "🎵  背景配樂  60%", Vector2(382, 239), Vector2(520, 42), 24, Color("#ffffff"))
+ music_slider = HSlider.new()
+ music_slider.position = Vector2(395, 285)
+ music_slider.size = Vector2(490, 38)
+ music_slider.min_value = 0.0
+ music_slider.max_value = 1.0
+ music_slider.step = 0.05
+ music_slider.value = 0.60
+ settings.add_child(music_slider)
+ music_slider.value_changed.connect(func(value: float):
+  music_value.text = "🎵  背景配樂  %d%%" % roundi(value * 100.0)
+  music_volume_changed.emit(value)
+ )
+ sfx_value = _text(settings, "🔊  遊戲音效  75%", Vector2(382, 350), Vector2(520, 42), 24, Color("#ffffff"))
+ sfx_slider = HSlider.new()
+ sfx_slider.position = Vector2(395, 399)
+ sfx_slider.size = Vector2(490, 38)
+ sfx_slider.min_value = 0.0
+ sfx_slider.max_value = 1.0
+ sfx_slider.step = 0.05
+ sfx_slider.value = 0.75
+ settings.add_child(sfx_slider)
+ sfx_slider.value_changed.connect(func(value: float):
+  sfx_value.text = "🔊  遊戲音效  %d%%" % roundi(value * 100.0)
+  sfx_volume_changed.emit(value)
+ )
+ _text(settings, "操作：自動加速、左右轉向、按住甩尾、點擊道具", Vector2(356, 505), Vector2(572, 45), 19, Color("#dcebf8"), true)
+ var close_button = _button(settings, "✔  儲存並返回", Vector2(384, 556), Vector2(514, 73), Color("#46a58e"), 28)
+ close_button.pressed.connect(_close_settings)
+
+func set_audio_levels(music: float, effects: float) -> void:
+ music_slider.set_value_no_signal(clampf(music, 0.0, 1.0))
+ sfx_slider.set_value_no_signal(clampf(effects, 0.0, 1.0))
+ music_value.text = "🎵  背景配樂  %d%%" % roundi(music_slider.value * 100.0)
+ sfx_value.text = "🔊  遊戲音效  %d%%" % roundi(sfx_slider.value * 100.0)
+
+func _open_settings(origin: String) -> void:
+ settings_origin = origin
+ menu.visible = false
+ hud.visible = false
+ result.visible = false
+ pause_page.visible = false
+ settings.visible = true
+ _release_controls()
+
+func _close_settings() -> void:
+ match settings_origin:
+  "pause":
+   show_pause()
+  "result":
+   settings.visible = false
+   result.visible = true
+  _:
+   show_menu()
+
+func close_settings() -> void:
+ if settings.visible:
+  _close_settings()
+
+func show_pause() -> void:
+ menu.visible = false
+ hud.visible = false
+ result.visible = false
+ settings.visible = false
+ pause_page.visible = true
+ _release_controls()

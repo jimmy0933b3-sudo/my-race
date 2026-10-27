@@ -7,6 +7,9 @@ var total_length := 0.0
 var segment_lengths: Array[float] = []
 var track_palette = [Color("#4e5879"), Color("#606c8d")]
 var rng := RandomNumberGenerator.new()
+var material_cache: Dictionary = {}
+var shared_sphere: SphereMesh
+var themed_landmarks := 0
 
 func _ready() -> void:
  rng.seed = 80321
@@ -49,6 +52,9 @@ func nearest_index(pos: Vector3) -> int:
  return best
 
 func _mat(c: Color, rough := 0.8, glow := false) -> StandardMaterial3D:
+ var key = "%s-%.2f-%s" % [c.to_html(), rough, str(glow)]
+ if material_cache.has(key):
+  return material_cache[key]
  var m = StandardMaterial3D.new()
  m.albedo_color = c
  m.roughness = rough
@@ -56,6 +62,7 @@ func _mat(c: Color, rough := 0.8, glow := false) -> StandardMaterial3D:
   m.emission_enabled = true
   m.emission = c
   m.emission_energy_multiplier = 1.35
+ material_cache[key] = m
  return m
 
 func _shape(mesh: Mesh, at: Vector3, col: Color, parent: Node3D = null, glow := false) -> MeshInstance3D:
@@ -75,12 +82,13 @@ func _box(pos: Vector3, size: Vector3, col: Color, parent: Node3D = null, glow :
  return _shape(mesh, pos, col, parent, glow)
 
 func _ball(pos: Vector3, scale3: Vector3, col: Color, parent: Node3D = null) -> MeshInstance3D:
- var mesh = SphereMesh.new()
- mesh.radius = 1.0
- mesh.height = 2.0
- mesh.radial_segments = 12
- mesh.rings = 7
- var node = _shape(mesh, pos, col, parent)
+ if shared_sphere == null:
+  shared_sphere = SphereMesh.new()
+  shared_sphere.radius = 1.0
+  shared_sphere.height = 2.0
+  shared_sphere.radial_segments = 12
+  shared_sphere.rings = 7
+ var node = _shape(shared_sphere, pos, col, parent)
  node.scale = scale3
  return node
 
@@ -117,8 +125,15 @@ func _ribbon(half_width: float, y: float, color: Color) -> void:
 func _build_world() -> void:
  var env = WorldEnvironment.new()
  env.environment = Environment.new()
- env.environment.background_mode = Environment.BG_COLOR
- env.environment.background_color = Color("#98d8fa")
+ env.environment.background_mode = Environment.BG_SKY
+ var sky = Sky.new()
+ var sky_paint = ProceduralSkyMaterial.new()
+ sky_paint.sky_top_color = Color("#66b7f5")
+ sky_paint.sky_horizon_color = Color("#f9d5d8")
+ sky_paint.ground_horizon_color = Color("#a5e1d3")
+ sky_paint.ground_bottom_color = Color("#7dc69b")
+ sky.sky_material = sky_paint
+ env.environment.sky = sky
  env.environment.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
  env.environment.ambient_light_color = Color("#cce9ff")
  env.environment.ambient_light_energy = 0.75
@@ -140,10 +155,11 @@ func _build_world() -> void:
 
  _box(Vector3(0, -0.30, 0), Vector3(355, 0.4, 315), Color("#71c895"))
  _box(Vector3(0, -0.10, 0), Vector3(130, 0.22, 86), Color("#89d7a9"))
- _ribbon(HALF_WIDTH + 1.8, 0.02, Color("#eadbc1"))
- _ribbon(HALF_WIDTH + 0.70, 0.055, Color("#e87da1"))
- _ribbon(HALF_WIDTH, 0.085, Color("#485774"))
- _ribbon(HALF_WIDTH - 0.45, 0.090, Color("#57667d"))
+ _ribbon(HALF_WIDTH + 2.0, 0.022, Color("#f4e6be"))
+ _ribbon(HALF_WIDTH + 0.78, 0.055, Color("#f48aa7"))
+ _ribbon(HALF_WIDTH, 0.086, Color("#39445f"))
+ _ribbon(HALF_WIDTH - 0.44, 0.092, Color("#53647f"))
+ _ribbon(HALF_WIDTH - 3.0, 0.096, Color("#5e7191"))
  for i in range(0, SEGMENTS, 3):
   var a = at(i, 0.0)
   var b = at(i + 1, 0.0)
@@ -151,6 +167,7 @@ func _build_world() -> void:
   var mid = (a + b) * 0.5
   var dash = _box(Vector3(mid.x, 0.105, mid.z), Vector3(0.28, 0.027, 1.65), Color("#ffe9a4"), null, true)
   dash.rotation.y = atan2(-t.x, -t.z)
+ _add_raceway_details()
  for i in range(0, SEGMENTS, 5):
   for side in [-1.0, 1.0]:
    var p = at(i, side * (HALF_WIDTH + 1.0))
@@ -203,6 +220,7 @@ func _build_world() -> void:
   _ball(cloud + Vector3(3.7, 0.2, 0), Vector3(4.0, 1.7, 2.6), Color("#f5fcff"))
  _box(Vector3(0, 0.1, 0), Vector3(12, 0.35, 12), Color("#f9d992"))
  _box(Vector3(0, 0.46, 0), Vector3(7.6, 0.42, 7.6), Color("#ff99b8"))
+ _add_theme_park()
 
 func _tree(p: Vector3, size: float) -> void:
  _box(p + Vector3(0, size * 1.4, 0), Vector3(size * 0.6, size * 2.8, size * 0.6), Color("#9b795e"))
@@ -215,3 +233,118 @@ func _crystal(p: Vector3, size: float) -> void:
  var c = [Color("#b5b4f9"), Color("#87e5ea"), Color("#f9accd")][rng.randi_range(0, 2)]
  _cone(p + Vector3(0, size, 0), Vector3(size * 0.7, size, size * 0.7), c)
  _cone(p + Vector3(size * 0.8, size * 0.55, 0), Vector3(size * 0.45, size * 0.55, size * 0.45), c.lightened(0.18))
+
+func _add_raceway_details() -> void:
+ # Checker-painted kerbs, racing lane guides and curved illuminated safety rails.
+ for i in range(0, SEGMENTS, 3):
+  var tangent = direction(float(i))
+  var heading = atan2(-tangent.x, -tangent.z)
+  var stripe = Color("#ffffff") if (i / 3) % 2 == 0 else Color("#fe95b2")
+  for side in [-1.0, 1.0]:
+   var curb = at(i, side * (HALF_WIDTH + 0.31))
+   var patch = _box(Vector3(curb.x, 0.117, curb.z), Vector3(0.72, 0.055, 3.4), stripe)
+   patch.rotation.y = heading
+ for i in range(0, SEGMENTS, 5):
+  var tangent = direction(float(i))
+  var heading = atan2(-tangent.x, -tangent.z)
+  for lane in [-3.45, 3.45]:
+   var p = at(i, lane)
+   var line = _box(Vector3(p.x, 0.115, p.z), Vector3(0.16, 0.018, 2.55), Color("#b7eaff"), null, true)
+   line.rotation.y = heading
+ for i in range(0, SEGMENTS, 4):
+  for side in [-1.0, 1.0]:
+   var a = at(i, side * (HALF_WIDTH + 2.03))
+   var b = at(i + 4, side * (HALF_WIDTH + 2.03))
+   var delta = b - a
+   var beam = _box((a + b) * 0.5 + Vector3(0, 1.32, 0), Vector3(0.24, 0.26, delta.length() + 0.18), Color("#f9f0c5"))
+   beam.rotation.y = atan2(-delta.x, -delta.z)
+   var neon = _box((a + b) * 0.5 + Vector3(0, 1.51, 0), Vector3(0.16, 0.07, delta.length() + 0.18), Color("#ff9ace") if (i / 4) % 2 == 0 else Color("#8becff"), null, true)
+   neon.rotation.y = beam.rotation.y
+ # Sparingly placed orientation arrows stand out on bends without clutter.
+ for i in range(12, SEGMENTS, 18):
+  var t = direction(float(i))
+  var heading = atan2(-t.x, -t.z)
+  var mark = at(i, 0.0)
+  var arrow = _box(Vector3(mark.x, 0.135, mark.z), Vector3(2.6, 0.019, 0.32), Color("#ffe4aa"), null, true)
+  arrow.rotation.y = heading
+
+func _add_theme_park() -> void:
+ # Four recognisable scenic districts around the circuit.
+ var names = ["SUGAR RUSH", "MAGIC FOREST", "STAR FALLS", "MONSTER CITY"]
+ var colors = [Color("#ff86b3"), Color("#72ddad"), Color("#8bafff"), Color("#ffc36a")]
+ for zone in range(4):
+  var index = 19 + zone * 43
+  _festival_arch(index, names[zone], colors[zone])
+  themed_landmarks += 1
+  for j in range(4):
+   var progress = index + 7 + j * 6
+   for side in [-1.0, 1.0]:
+    var p = at(progress, side * (HALF_WIDTH + 12.0 + float((j + zone) % 3) * 2.0))
+    match zone:
+     0:
+      _candy_pole(p, 0.9 + float(j % 2) * 0.26)
+     1:
+      _mushroom(p, 0.95 + float(j % 3) * 0.24, colors[zone].lightened(0.18))
+     2:
+      _crystal(p, 2.5 + float(j % 3) * 0.4)
+      _star_tower(p + Vector3(3.1, 0, -1.5), 0.8, colors[zone])
+     3:
+      _star_tower(p, 1.0 + float(j % 2) * 0.28, colors[zone])
+ # Central monster festival: centerpiece, confetti sculptures and candy houses.
+ _center_mascot(Vector3(0, 1.0, 0))
+ for n in range(8):
+  var a = TAU * float(n) / 8.0
+  var p = Vector3(cos(a) * 18.0, 0.2, sin(a) * 13.0)
+  if n % 2 == 0:
+   _mushroom(p, 1.35, Color("#ff8fbd"))
+  else:
+   _candy_pole(p, 1.35)
+
+func _festival_arch(index: int, name: String, color: Color) -> void:
+ var t = direction(float(index))
+ var mid = at(index)
+ for side in [-1.0, 1.0]:
+  var p = at(index, side * (HALF_WIDTH + 2.55))
+  _box(Vector3(p.x, 3.2, p.z), Vector3(0.85, 6.4, 0.85), color)
+  _box(Vector3(p.x, 3.15, p.z), Vector3(0.98, 0.18, 0.98), Color("#fff1c4"), null, true)
+  _ball(Vector3(p.x, 6.75, p.z), Vector3(0.77, 0.77, 0.77), Color("#fff0a8"))
+ var bar = _box(mid + Vector3(0, 6.55, 0), Vector3(HALF_WIDTH * 2.0 + 6.4, 1.33, 1.20), color)
+ bar.rotation.y = atan2(-t.x, -t.z)
+ var crest = _ball(mid + Vector3(0, 7.68, 0), Vector3(1.02, 1.02, 0.63), Color("#fff0a4"))
+ var banner = Label3D.new()
+ banner.text = name
+ banner.font_size = 76
+ banner.pixel_size = 0.014
+ banner.modulate = Color("#fffdf0")
+ banner.outline_modulate = Color("#29334e")
+ banner.outline_size = 15
+ banner.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+ banner.position = mid + Vector3(0, 6.55, 0)
+ add_child(banner)
+
+func _mushroom(p: Vector3, scale_factor: float, cap: Color) -> void:
+ _box(p + Vector3(0, 1.7 * scale_factor, 0), Vector3(0.75, 3.4, 0.75) * scale_factor, Color("#fff0d1"))
+ _ball(p + Vector3(0, 3.55 * scale_factor, 0), Vector3(2.3, 0.98, 2.3) * scale_factor, cap)
+ for side in [-1.0, 1.0]:
+  _ball(p + Vector3(side * 1.0 * scale_factor, 4.14 * scale_factor, -0.3), Vector3(0.38, 0.13, 0.38) * scale_factor, Color("#fffbe8"))
+
+func _candy_pole(p: Vector3, scale_factor: float) -> void:
+ _box(p + Vector3(0, 2.45 * scale_factor, 0), Vector3(0.60, 4.9, 0.60) * scale_factor, Color("#f8d5eb"))
+ for stripe in range(5):
+  _box(p + Vector3(0, (0.8 + float(stripe) * 0.83) * scale_factor, 0), Vector3(0.70, 0.28, 0.70) * scale_factor, Color("#ff8bba"))
+ _ball(p + Vector3(0, 5.30 * scale_factor, 0), Vector3(1.55, 1.55, 1.55) * scale_factor, Color("#8be5ed"))
+ _ball(p + Vector3(0, 5.30 * scale_factor, -0.6 * scale_factor), Vector3(0.64, 0.64, 1.02) * scale_factor, Color("#d7f8ff"))
+
+func _star_tower(p: Vector3, scale_factor: float, color: Color) -> void:
+ _box(p + Vector3(0, 2.0 * scale_factor, 0), Vector3(2.0, 4.0, 2.0) * scale_factor, color.darkened(0.13))
+ _box(p + Vector3(0, 4.28 * scale_factor, 0), Vector3(2.65, 0.46, 2.65) * scale_factor, Color("#ffe7b5"))
+ _cone(p + Vector3(0, 5.55 * scale_factor, 0), Vector3(1.3, 1.15, 1.3) * scale_factor, color)
+ _ball(p + Vector3(0, 6.74 * scale_factor, 0), Vector3(0.40, 0.40, 0.40) * scale_factor, Color("#fff7ba"))
+
+func _center_mascot(p: Vector3) -> void:
+ _ball(p + Vector3(0, 3.4, 0), Vector3(3.3, 3.1, 2.9), Color("#b09bff"))
+ for side in [-1.0, 1.0]:
+  _cone(p + Vector3(side * 1.65, 6.60, 0), Vector3(0.65, 1.23, 0.65), Color("#ffe3a5"))
+  _ball(p + Vector3(side * 1.05, 4.05, -2.45), Vector3(0.73, 0.91, 0.42), Color("#fff9f2"))
+  _ball(p + Vector3(side * 1.05, 4.02, -2.83), Vector3(0.29, 0.42, 0.16), Color("#34405a"))
+ _ball(p + Vector3(0, 2.45, -2.80), Vector3(1.25, 0.40, 0.26), Color("#53477b"))

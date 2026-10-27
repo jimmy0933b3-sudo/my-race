@@ -3,10 +3,13 @@ extends Node3D
 const Kart = preload("res://scripts/monster_kart.gd")
 const Circuit = preload("res://scripts/track.gd")
 const RaceUI = preload("res://scripts/race_ui.gd")
+const ArcadeAudio = preload("res://scripts/audio.gd")
 const LAPS = 3
 var circuit
 var camera: Camera3D
 var interface
+var audio
+var paused_from := "racing"
 var display_kart
 var player
 var opponents: Array[Dictionary] = []
@@ -33,6 +36,9 @@ var effect_nodes: Array[Dictionary] = []
 
 func _ready() -> void:
  rng.seed = 19432
+ audio = ArcadeAudio.new()
+ audio.name = "MusicAndEffects"
+ add_child(audio)
  circuit = Circuit.new()
  circuit.name = "CandyMonsterCircuit"
  add_child(circuit)
@@ -48,6 +54,11 @@ func _ready() -> void:
  interface.return_to_menu.connect(_return_to_menu)
  interface.selection_changed.connect(_preview)
  interface.item_used.connect(_use_item)
+ interface.pause_requested.connect(_pause_race)
+ interface.resume_requested.connect(_resume_race)
+ interface.music_volume_changed.connect(audio.set_music_level)
+ interface.sfx_volume_changed.connect(audio.set_sfx_level)
+ interface.set_audio_levels(audio.music_level, audio.sfx_level)
  _preview(selected)
  _menu_camera(1.0)
 
@@ -61,6 +72,8 @@ func _spawn(index: int, at: Vector3, angle: float) -> Node3D:
 
 func _preview(index: int) -> void:
  selected = index
+ if audio != null and race_state == "menu":
+  audio.play_cue("select")
  if race_state != "menu":
   return
  if is_instance_valid(display_kart):
@@ -122,6 +135,8 @@ func _start_race() -> void:
   opponents.append({"car": c, "progress": progress, "lane": lane, "speed": 29.0 + float(j % 4) * 1.65, "stun": 0.0, "seed": float(j) * 1.7, "boost": 0.0})
  _create_pickups()
  race_state = "countdown"
+ audio.set_race_active(true)
+ audio.play_cue("countdown")
  count_time = 3.4
  interface.show_race()
  interface.update_hud(1, 1, 0.0, 0.0, "")
@@ -131,9 +146,26 @@ func _start_race() -> void:
 func _return_to_menu() -> void:
  _clear_race()
  race_state = "menu"
+ audio.set_race_active(false)
+ audio.play_cue("select")
  interface.show_menu()
  _preview(selected)
  _menu_camera(1.0)
+
+func _pause_race() -> void:
+ if race_state != "racing" and race_state != "countdown":
+  return
+ paused_from = race_state
+ race_state = "paused"
+ audio.set_race_active(false)
+ interface.show_pause()
+
+func _resume_race() -> void:
+ if race_state != "paused":
+  return
+ race_state = paused_from
+ audio.set_race_active(true)
+ interface.show_race()
 
 func _angle_for(v: Vector3) -> float:
  return atan2(-v.x, -v.z)
@@ -164,6 +196,8 @@ func _physics_process(dt: float) -> void:
   var number = int(ceil(count_time))
   interface.show_countdown(str(number) if number > 0 else "GO!")
   _follow_camera(dt * 3.0)
+  if count_time <= 0.0 and count_time + dt > 0.0:
+   audio.play_cue("go")
   if count_time <= -0.52:
    race_state = "racing"
    interface.show_countdown("")
@@ -209,6 +243,7 @@ func _update_player(dt: float) -> void:
  elif previously_drifting and drift_charge > 0.65:
   boost_time = maxf(boost_time, clampf(drift_charge * 0.74, 0.9, 2.7))
   _flash(player.position, Color("#9ee9ff"))
+  audio.play_cue("boost")
   drift_charge = 0.0
  elif not drift:
   drift_charge = 0.0
@@ -258,6 +293,7 @@ func _update_ai(dt: float) -> void:
    speed *= 0.72
    bump_wait = 0.85
    _flash(player.position + Vector3.UP, Color("#ffb6c7"))
+   audio.play_cue("hit")
   for h in hazards:
    if h["alive"] and car.position.distance_to(h["node"].position) < 2.1:
     bot["stun"] = 2.4
@@ -316,6 +352,7 @@ func _update_items(dt: float) -> void:
    current_item = ["TURBO", "SHIELD", "ZAP", "BANANA"][rng.randi_range(0, 3)]
    item["cooldown"] = 9.0
    _flash(orb.position, Color("#c6f8ff"))
+   audio.play_cue("pickup")
  for h in hazards:
   if not h["alive"]:
    continue
@@ -328,6 +365,7 @@ func _update_items(dt: float) -> void:
    bump_wait = 1.2
    h["alive"] = false
    h["node"].visible = false
+   audio.play_cue("hit")
 
 func _item_label() -> String:
  match current_item:
@@ -340,6 +378,7 @@ func _item_label() -> String:
 func _use_item() -> void:
  if race_state != "racing" or current_item == "":
   return
+ audio.play_cue("item")
  match current_item:
   "TURBO":
    boost_time = maxf(boost_time, 3.6)
@@ -417,12 +456,22 @@ func _finish() -> void:
   return
  _update_rank()
  race_state = "finished"
+ audio.set_race_active(false)
+ audio.play_cue("finish")
  interface.show_result(race_rank, race_time)
 
 func _unhandled_key_input(event: InputEvent) -> void:
  if not (event is InputEventKey) or not event.pressed or event.echo:
   return
+ if event.keycode == KEY_ESCAPE:
+  if interface.settings.visible:
+   interface.close_settings()
+  elif race_state == "paused":
+   _resume_race()
+  elif race_state == "racing" or race_state == "countdown":
+   _pause_race()
+  elif race_state == "finished":
+   _return_to_menu()
+  return
  if event.keycode == KEY_SPACE or event.keycode == KEY_E:
   _use_item()
- if event.keycode == KEY_ESCAPE and race_state == "finished":
-  _return_to_menu()
