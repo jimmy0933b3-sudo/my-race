@@ -2,7 +2,7 @@ extends "res://scripts/race_ui.gd"
 ## Complete skin/layout rebuild with one cohesive graphic identity.
 ## Inherits battle controls and signals from the tested UI interface.
 signal quality_changed(level: int)
-var quality_level := 1
+var quality_level := 3
 var quality_buttons: Array[Button] = []
 var quality_description: Label
 const BADGE = preload("res://scripts/garage_badge.gd")
@@ -239,9 +239,9 @@ func _make_settings() -> void:
   sfx_value.text="遊戲音效  %d%%" % roundi(v*100.0)
   sfx_volume_changed.emit(v))
  _text(settings,"畫質  /  GRAPHICS",Vector2(388,470),Vector2(509,33),22,PALETTE["gold"])
- var names = ["省電", "標準", "精緻"]
+ var names = ["省電", "標準", "精緻", "極致"]
  for i in range(3):
-  var button=_button(settings,names[i],Vector2(386+i*169,510),Vector2(158,49),Color("#426182"),20)
+  var button=_button(settings,names[i],Vector2(386+i*132,510),Vector2(122,49),Color("#426182"),20)
   button.pressed.connect(_select_quality.bind(i))
   quality_buttons.append(button)
  quality_description=_text(settings,"",Vector2(378,570),Vector2(528,29),17,PALETTE["muted"],true)
@@ -250,11 +250,12 @@ func _make_settings() -> void:
  back.pressed.connect(_close_settings)
 
 func set_quality_level(value: int, notify: bool = false) -> void:
- quality_level=clampi(value,0,2)
+ quality_level=clampi(value,0,3)
  var descriptions = [
   "省電：關閉額外光影和抗鋸齒，低功耗遊玩",
   "標準：2× 平滑邊緣、柔和光影、較豐富場景",
-  "精緻：4× 抗鋸齒、環境泛光、完整植被細節"
+  "精緻：4× 抗鋸齒、環境泛光、更多場景細節",
+  "極致：8× 抗鋸齒、遠距柔影、完整場景細節"
  ]
  if quality_description!=null:
   quality_description.text=descriptions[quality_level]
