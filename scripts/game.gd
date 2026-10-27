@@ -3,7 +3,7 @@ extends Node3D
 const Kart = preload("res://scripts/monster_kart.gd")
 const Circuit = preload("res://scripts/track.gd")
 const RaceUI = preload("res://scripts/race_ui.gd")
-const LAPS := 3
+const LAPS = 3
 var circuit: Node3D
 var camera: Camera3D
 var interface: CanvasLayer
