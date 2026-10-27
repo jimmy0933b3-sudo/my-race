@@ -13,6 +13,10 @@ func _run_tests() -> void:
  root.add_child(game)
  await process_frame
  assert(game.interface.selection_buttons.size() == 12, "12 selectable monster cars")
+ assert(game.showroom != null and game.showroom.visible, "new 3D garage showroom")
+ assert(game.interface.boost_bar != null, "new race HUD acceleration display")
+ assert(game.circuit.premium_road != null, "fine-grain road surface and terrain")
+ assert(game.circuit.premium_road.deco_count >= 70, "curved neon gates and stadium spectators")
  assert(game.interface.settings != null, "settings screen")
  assert(game.interface.pause_page != null, "pause screen")
  assert(game.circuit.themed_landmarks == 4, "four decorated track zones")
@@ -30,6 +34,7 @@ func _run_tests() -> void:
   assert(game.selected == i, "Monster selection must work")
   assert(game.display_kart.art_detail != null, "monster art component")
   assert(game.display_kart.art_detail.detail_count >= 40, "detailed car sculpting")
+  assert(game.display_kart.chassis_detail != null, "custom sculpted curved bodywork")
  assert(game.interface.map_buttons.size() == 4, "four map choices must render in garage")
  for map_index in range(4):
   game.interface._select_map(map_index)
@@ -37,6 +42,7 @@ func _run_tests() -> void:
   assert(game.selected_map == map_index, "selection reaches game controller")
   assert(game.circuit.map_index == map_index, "correct track geometry selected")
   assert(game.circuit.centers.size() == 180, "full traversable circuit")
+  assert(game.circuit.premium_road.road != null, "painted asphalt mesh")
   assert(game.circuit.total_length > 250.0, "complete closed loop")
   if map_index == 0:
    assert(game.circuit.themed_landmarks == 4, "original monster park is retained")
@@ -46,6 +52,7 @@ func _run_tests() -> void:
    assert(game.circuit.alternate_detail.landmark_count >= 24, "biome landmarks and billboards")
    assert(game.circuit.alternate_detail.scatter_count >= 800, "dense instanced decoration")
  game._start_race()
+ assert(not game.showroom.visible, "showroom hidden while racing")
  assert(game.opponents.size() == 7, "seven AI opponents")
  assert(game.player != null, "playable monster car")
  assert(game.pickups.size() == 16, "collectible items")
@@ -84,6 +91,7 @@ func _run_tests() -> void:
  assert(game.race_state == "finished", "finish panel")
  game._return_to_menu()
  assert(game.race_state == "menu", "back to garage")
+ assert(game.showroom.visible, "showroom restored on return")
  print("MONSTER KART SMOKE OK: 12 cars, 4 selectable 3D maps, detailed biomes, music, settings, pause, 7 AI, drift, items and finish")
  game.queue_free()
  quit(0)
