@@ -3,6 +3,8 @@ extends Node3D
 ## emerald grasslands, sunlit dune kingdom, and orbital starway.
 ## All mesh geometry is original, no external assets or textures are needed.
 const NAMES = ["", "EMERALD MEADOWS", "GOLDEN DUNES", "STAR RING"]
+const ROAD_HALF_WIDTH = 8.6
+const SEGMENT_COUNT = 180
 var course
 var biome := 1
 var rng := RandomNumberGenerator.new()
@@ -204,28 +206,28 @@ func _road() -> void:
  var curb = [Color("#f7ffdf"), Color("#f9bb7f"), Color("#dd9bfa")][biome - 1]
  var asphalt = [Color("#405968"), Color("#875d63"), Color("#293459")][biome - 1]
  var stripe = [Color("#80ca9d"), Color("#ab7472"), Color("#4964a1")][biome - 1]
- course._ribbon(course.HALF_WIDTH + 2.6, -0.05, shoulder)
- course._ribbon(course.HALF_WIDTH + 1.25, 0.012, curb)
- course._ribbon(course.HALF_WIDTH + 0.46, 0.049, asphalt)
- course._ribbon(course.HALF_WIDTH - 0.25, 0.087, stripe)
- course._ribbon(course.HALF_WIDTH - 2.70, 0.099, asphalt.lightened(0.10))
- for i in range(0, course.SEGMENTS, 3):
+ course._ribbon(ROAD_HALF_WIDTH + 2.6, -0.05, shoulder)
+ course._ribbon(ROAD_HALF_WIDTH + 1.25, 0.012, curb)
+ course._ribbon(ROAD_HALF_WIDTH + 0.46, 0.049, asphalt)
+ course._ribbon(ROAD_HALF_WIDTH - 0.25, 0.087, stripe)
+ course._ribbon(ROAD_HALF_WIDTH - 2.70, 0.099, asphalt.lightened(0.10))
+ for i in range(0, SEGMENT_COUNT, 3):
   var forward: Vector3 = course.direction(float(i))
   var heading: float = atan2(-forward.x, -forward.z)
   for side in [-1.0, 1.0]:
-   var p: Vector3 = course.at(i, side * (course.HALF_WIDTH + 0.9))
+   var p: Vector3 = course.at(i, side * (ROAD_HALF_WIDTH + 0.9))
    var tiled = _box(Vector3(p.x, 0.124, p.z), Vector3(0.73, 0.072, 2.8), colors[2] if i % 6 == 0 else colors[4])
    tiled.rotation.y = heading
   var m: Vector3 = course.at(i, 0)
   if i % 2 == 0:
    var dash = _box(Vector3(m.x, 0.130, m.z), Vector3(0.26, 0.025, 2.0), Color("#fff3c3"), biome == 3)
    dash.rotation.y = heading
- for i in range(0, course.SEGMENTS, 6):
+ for i in range(0, SEGMENT_COUNT, 6):
   for side in [-1.0, 1.0]:
-   var p: Vector3 = course.at(i, side * (course.HALF_WIDTH + 2.25))
+   var p: Vector3 = course.at(i, side * (ROAD_HALF_WIDTH + 2.25))
    _box(Vector3(p.x, 0.94, p.z), Vector3(0.33, 1.88, 0.36), colors[1])
    _sphere(Vector3(p.x, 1.95, p.z), Vector3(0.24, 0.25, 0.24), colors[2], biome == 3)
-   var next: Vector3 = course.at(i + 6, side * (course.HALF_WIDTH + 2.25))
+   var next: Vector3 = course.at(i + 6, side * (ROAD_HALF_WIDTH + 2.25))
    _line(Vector3(p.x, 1.34, p.z), Vector3(next.x, 1.34, next.z), 0.105, colors[3], biome == 3)
  # Finish line, gantry, checker tiles, and illuminated race banner.
  var start: Vector3 = course.at(0)
@@ -237,7 +239,7 @@ func _road() -> void:
   var patch = _box(Vector3(p.x, 0.151, p.z), Vector3(1.33, 0.04, 0.95), Color("#f3f9f8") if j % 2 else Color("#253450"))
   patch.rotation.y = angle
  for side in [-1.0, 1.0]:
-  var p: Vector3 = course.at(0, side * (course.HALF_WIDTH + 2.5))
+  var p: Vector3 = course.at(0, side * (ROAD_HALF_WIDTH + 2.5))
   _box(Vector3(p.x, 3.5, p.z), Vector3(0.8, 7.0, 0.8), colors[4])
   _sphere(Vector3(p.x, 7.1, p.z), Vector3.ONE * 0.66, colors[2], true)
  var lintel = _box(start + Vector3(0, 6.85, 0), Vector3(22.4, 1.20, 1.1), colors[1])
@@ -246,7 +248,7 @@ func _road() -> void:
 
 func _districts() -> void:
  for n in range(23):
-  var idx: float = float(n) * float(course.SEGMENTS) / 23.0 + 3.0
+  var idx: float = float(n) * float(SEGMENT_COUNT) / 23.0 + 3.0
   var side = -1.0 if n % 2 == 0 else 1.0
   var distance = 21.0 + float(n % 3) * 5.0
   var p: Vector3 = course.sample(idx, side * distance)
@@ -266,7 +268,7 @@ func _districts() -> void:
   landmark_count += 1
  for i in range(4):
   var idx = 16.0 + i * 44.0
-  var p: Vector3 = course.sample(idx, -1.0 * (course.HALF_WIDTH + 9.8))
+  var p: Vector3 = course.sample(idx, -1.0 * (ROAD_HALF_WIDTH + 9.8))
   _billboard(p, i)
   landmark_count += 1
 
@@ -373,7 +375,7 @@ func _billboard(p: Vector3, index: int) -> void:
  _sign(words[index], p + Vector3(0, 2.1, -0.37), 59)
 
 func _small_details() -> void:
- for i in range(0, course.SEGMENTS, 7):
+ for i in range(0, SEGMENT_COUNT, 7):
   var ix: float = float(i)
   var direction: Vector3 = course.direction(ix)
   for side in [-1.0, 1.0]:
@@ -412,7 +414,7 @@ func _scatter() -> void:
   mesh.mesh = instance_mesh
   mesh.instance_count = 210
   for j in range(210):
-   var index = rng.randf_range(0.0, float(course.SEGMENTS))
+   var index = rng.randf_range(0.0, float(SEGMENT_COUNT))
    var dist = rng.randf_range(13.8, 42.0)
    var side = -1.0 if rng.randf() < 0.5 else 1.0
    var p: Vector3 = course.sample(index, side * dist)
