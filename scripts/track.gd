@@ -1,6 +1,9 @@
 extends Node3D
 ## Fantasy circuit constructed entirely from mobile-friendly 3D meshes.
 const SCENERY_ART = preload("res://scripts/scenery_art.gd")
+const BIOME_WORLD = preload("res://scripts/biome_world.gd")
+var map_index := 0
+var alternate_detail
 var scenery_detail
 const SEGMENTS = 180
 const HALF_WIDTH = 8.6
@@ -19,6 +22,16 @@ func _ready() -> void:
   var a = TAU * float(i) / float(SEGMENTS)
   var r1 = 60.0 + 7.0 * sin(a * 3.0 + 0.3)
   var r2 = 47.0 + 6.0 * sin(a * 4.0 + 1.1)
+  match map_index:
+   1:
+    r1 = 69.0 + 8.0 * sin(a * 2.0 + 0.4) + 5.0 * sin(a * 5.0)
+    r2 = 48.0 + 7.0 * sin(a * 3.0)
+   2:
+    r1 = 65.0 + 11.0 * sin(a * 4.0 + 0.3)
+    r2 = 51.0 + 6.0 * sin(a * 2.0 + 0.9)
+   3:
+    r1 = 56.0 + 10.0 * sin(a * 3.0 + 1.2)
+    r2 = 57.0 + 9.0 * sin(a * 5.0 + 0.25)
   centers.append(Vector3(cos(a) * r1, 0.12, sin(a) * r2))
  for i in range(SEGMENTS):
   var size = centers[i].distance_to(centers[(i + 1) % SEGMENTS])
@@ -125,6 +138,11 @@ func _ribbon(half_width: float, y: float, color: Color) -> void:
  add_child(road)
 
 func _build_world() -> void:
+ if map_index > 0:
+  alternate_detail = BIOME_WORLD.new()
+  add_child(alternate_detail)
+  alternate_detail.build(self, map_index)
+  return
  var env = WorldEnvironment.new()
  env.environment = Environment.new()
  env.environment.background_mode = Environment.BG_SKY
