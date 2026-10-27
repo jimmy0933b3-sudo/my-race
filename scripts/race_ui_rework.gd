@@ -1,6 +1,7 @@
 extends "res://scripts/race_ui.gd"
 ## Complete skin/layout rebuild with one cohesive graphic identity.
 ## Inherits battle controls and signals from the tested UI interface.
+const BADGE = preload("res://scripts/garage_badge.gd")
 const PALETTE = {
  "night": Color("#101c35ee"),
  "panel": Color("#1d2c49ec"),
@@ -50,7 +51,16 @@ func _make_menu() -> void:
   var data=KART.ROSTER[i]
   var p=Vector2(39+col*109,222+row*80)
   var color=Color(data["color"])
-  var b=_button(menu,"%02d  %s" % [i+1,str(data["eng"])],p,Vector2(103,74),color.darkened(0.54),14)
+  var b=_button(menu,"",p,Vector2(103,74),color.darkened(0.54),14)
+  var portrait=BADGE.new()
+  portrait.position=Vector2(1,10)
+  portrait.size=Vector2(53,53)
+  b.add_child(portrait)
+  portrait.setup_monster(i)
+  var card_name=_text(b,str(data["eng"]),Vector2(52,21),Vector2(49,22),12,PALETTE["paper"],true)
+  card_name.mouse_filter=Control.MOUSE_FILTER_IGNORE
+  var number=_text(b,"%02d" % (i+1),Vector2(54,45),Vector2(44,18),12,PALETTE["gold"],true)
+  number.mouse_filter=Control.MOUSE_FILTER_IGNORE
   b.pressed.connect(_select.bind(i))
   selection_buttons.append(b)
  _small_label(menu,"SELECTED DRIVER",Vector2(43,555),294)
@@ -66,7 +76,14 @@ func _make_menu() -> void:
   var y=141+i*97
   var card=_glow_panel(menu,Vector2(917,y),Vector2(324,88),accent[i],accent[i].darkened(0.68),16)
   card.mouse_filter=Control.MOUSE_FILTER_IGNORE
-  var button=_button(menu,"%02d   %s" % [i+1,maps[i]],Vector2(926,y+5),Vector2(303,53),accent[i].darkened(0.58),23)
+  var button=_button(menu,"",Vector2(926,y+5),Vector2(303,53),accent[i].darkened(0.58),22)
+  var image=BADGE.new()
+  image.position=Vector2(7,4)
+  image.size=Vector2(45,45)
+  button.add_child(image)
+  image.setup_course(i)
+  var title=_text(button,maps[i],Vector2(62,6),Vector2(225,40),22,PALETTE["paper"])
+  title.mouse_filter=Control.MOUSE_FILTER_IGNORE
   button.pressed.connect(_select_map.bind(i))
   map_buttons.append(button)
   _small_label(menu,tags[i],Vector2(956,y+56),255)
