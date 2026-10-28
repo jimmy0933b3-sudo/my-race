@@ -33,7 +33,7 @@ func build(track: Node3D, variant: int) -> void:
 func _set_palette() -> void:
  match biome:
   1: colors = [Color("#73d69d"), Color("#368a79"), Color("#fff1aa"), Color("#b2f5dc"), Color("#eea4bd")]
-  2: colors = [Color("#f9cf85"), Color("#dc9466"), Color("#fef1cf"), Color("#f8a66b"), Color("#81d1c9")]
+  2: colors = [Color("#d2a274"), Color("#aa7657"), Color("#e0c4a0"), Color("#a87357"), Color("#649a80")]
   3: colors = [Color("#2e335e"), Color("#9a7cec"), Color("#87edff"), Color("#ffa8d1"), Color("#fce9a6")]
 
 func _material(c: Color, glow := false, metal := false) -> StandardMaterial3D:
@@ -132,10 +132,10 @@ func _environment() -> void:
    material.ground_horizon_color = Color("#95dab4")
    material.ground_bottom_color = Color("#6ab783")
   2:
-   material.sky_top_color = Color("#6fb6ee")
-   material.sky_horizon_color = Color("#ffdec1")
-   material.ground_horizon_color = Color("#e7ab77")
-   material.ground_bottom_color = Color("#d79067")
+   material.sky_top_color = Color("#548bbd")
+   material.sky_horizon_color = Color("#b1c7c5")
+   material.ground_horizon_color = Color("#b78f73")
+   material.ground_bottom_color = Color("#ad7960")
   3:
    material.sky_top_color = Color("#070f2b")
    material.sky_horizon_color = Color("#303368")
@@ -146,22 +146,22 @@ func _environment() -> void:
  sk.sky_material = material
  sky.environment.sky = sk
  sky.environment.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
- sky.environment.ambient_light_color = Color("#baf5f6") if biome == 3 else Color("#e7f6ee")
- sky.environment.ambient_light_energy = 0.78 if biome == 3 else 0.70
+ sky.environment.ambient_light_color = Color("#baf5f6") if biome == 3 else (Color("#d7d3c3") if biome == 2 else Color("#e7f6ee"))
+ sky.environment.ambient_light_energy = 0.78 if biome == 3 else (0.40 if biome == 2 else 0.70)
  sky.environment.reflected_light_source = Environment.REFLECTION_SOURCE_BG
  sky.environment.tonemap_mode = Environment.TONE_MAPPER_FILMIC
  add_child(sky)
  var sun = DirectionalLight3D.new()
  sun.rotation_degrees = Vector3(-50, 25 if biome == 2 else -40, 0)
- sun.light_color = Color("#b7c4ff") if biome == 3 else Color("#fff1cc")
- sun.light_energy = 1.0 if biome == 3 else 1.65
+ sun.light_color = Color("#b7c4ff") if biome == 3 else (Color("#ffedda") if biome == 2 else Color("#fff1cc"))
+ sun.light_energy = 1.0 if biome == 3 else (1.02 if biome == 2 else 1.65)
  sun.shadow_enabled = true
  sun.directional_shadow_max_distance = 105.0
  add_child(sun)
  var rim = DirectionalLight3D.new()
  rim.rotation_degrees = Vector3(28, 132, 0)
- rim.light_color = Color("#a7ccff") if biome == 3 else Color("#bcfff0")
- rim.light_energy = 0.45
+ rim.light_color = Color("#a7ccff") if biome == 3 else (Color("#b9b9b7") if biome == 2 else Color("#bcfff0"))
+ rim.light_energy = 0.13 if biome == 2 else 0.45
  add_child(rim)
 
 func _ground() -> void:
@@ -176,14 +176,14 @@ func _ground() -> void:
     var a = TAU * float(i) / 13.0
     _sphere(Vector3(cos(a) * 33, -0.06, sin(a) * 26), Vector3(7.0, 0.27, 6.4), Color("#7eda9d"))
   2:
-   _box(Vector3(0, -0.45, 0), Vector3(390, 0.75, 360), Color("#f4cb81"))
+   _box(Vector3(0, -0.45, 0), Vector3(390, 0.75, 360), Color("#c49c70"))
    for i in range(32):
     var a = TAU * float(i) / 32.0
     var rad = 110.0 + rng.randf_range(-12.0, 26.0)
-    _sphere(Vector3(cos(a) * rad, -1.0, sin(a) * rad), Vector3(rng.randf_range(10, 26), rng.randf_range(3, 8), rng.randf_range(13, 23)), Color("#e3ab6d") if i % 3 else Color("#ffd794"))
+    _sphere(Vector3(cos(a) * rad, -1.0, sin(a) * rad), Vector3(rng.randf_range(10, 26), rng.randf_range(3, 8), rng.randf_range(13, 23)), Color("#bf8d66") if i % 3 else Color("#dbb07e"))
    for i in range(9):
     var a = TAU * float(i) / 9.0
-    _sphere(Vector3(cos(a) * 32, 0.0, sin(a) * 25), Vector3(8, 0.20, 6), Color("#ffe2a4"))
+    _sphere(Vector3(cos(a) * 32, 0.0, sin(a) * 25), Vector3(8, 0.20, 6), Color("#c5a179"))
   3:
    # An illuminated race platform above an alien planet and a distant nebula.
    _sphere(Vector3(0, -36.0, 0), Vector3(116, 26, 113), Color("#34437d"))
@@ -202,10 +202,10 @@ func _ground() -> void:
     _sphere(Vector3(cos(a) * distance, h, sin(a) * distance), Vector3.ONE * rng.randf_range(0.26, 0.62), Color("#dde9ff") if n % 4 else Color("#fcbdfd"), true)
 
 func _road() -> void:
- var shoulder = [Color("#c7deab"), Color("#f7d2a1"), Color("#3c4c89")][biome - 1]
- var curb = [Color("#f7ffdf"), Color("#f9bb7f"), Color("#dd9bfa")][biome - 1]
- var asphalt = [Color("#405968"), Color("#875d63"), Color("#293459")][biome - 1]
- var stripe = [Color("#80ca9d"), Color("#ab7472"), Color("#4964a1")][biome - 1]
+ var shoulder = [Color("#c7deab"), Color("#c8ae90"), Color("#3c4c89")][biome - 1]
+ var curb = [Color("#f7ffdf"), Color("#bd805d"), Color("#dd9bfa")][biome - 1]
+ var asphalt = [Color("#405968"), Color("#30353f"), Color("#293459")][biome - 1]
+ var stripe = [Color("#80ca9d"), Color("#455369"), Color("#4964a1")][biome - 1]
  course._ribbon(ROAD_HALF_WIDTH + 2.6, -0.05, shoulder)
  course._ribbon(ROAD_HALF_WIDTH + 1.25, 0.012, curb)
  course._ribbon(ROAD_HALF_WIDTH + 0.46, 0.049, asphalt)
@@ -220,7 +220,7 @@ func _road() -> void:
    tiled.rotation.y = heading
   var m: Vector3 = course.at(i, 0)
   if i % 2 == 0:
-   var dash = _box(Vector3(m.x, 0.130, m.z), Vector3(0.26, 0.025, 2.0), Color("#fff3c3"), biome == 3)
+   var dash = _box(Vector3(m.x, 0.130, m.z), Vector3(0.26, 0.025, 2.0), Color("#e1ded4"), biome == 3)
    dash.rotation.y = heading
  for i in range(0, SEGMENT_COUNT, 6):
   for side in [-1.0, 1.0]:
@@ -236,7 +236,7 @@ func _road() -> void:
  var lateral = Vector3(-start_forward.z, 0, start_forward.x)
  for j in range(12):
   var p: Vector3 = start + lateral * ((float(j) - 5.5) * 1.38)
-  var patch = _box(Vector3(p.x, 0.151, p.z), Vector3(1.33, 0.04, 0.95), Color("#f3f9f8") if j % 2 else Color("#253450"))
+  var patch = _box(Vector3(p.x, 0.151, p.z), Vector3(1.33, 0.04, 0.95), Color("#d8d8d4") if j % 2 else Color("#253450"))
   patch.rotation.y = angle
  for side in [-1.0, 1.0]:
   var p: Vector3 = course.at(0, side * (ROAD_HALF_WIDTH + 2.5))
@@ -387,7 +387,7 @@ func _small_details() -> void:
     _sphere(p + Vector3(0.35, 0.49, 0), Vector3.ONE * 0.16, Color("#fff4b4"), true)
    elif biome == 2:
     # Sandstone ribs and cacti with arms.
-    _sphere(p + Vector3(0, 0.3, 0), Vector3(1.35, 0.40, 1.25), Color("#e3a875"))
+    _sphere(p + Vector3(0, 0.3, 0), Vector3(1.35, 0.40, 1.25), Color("#bb8c65"))
     _line(p, p + Vector3(0, 2.45, 0), 0.34, Color("#64ad83"))
     _line(p + Vector3(0, 1.0, 0), p + Vector3(side * 0.85, 1.45, 0), 0.25, Color("#78c18b"))
     _line(p + Vector3(side * 0.85, 1.45, 0), p + Vector3(side * 0.85, 1.95, 0), 0.21, Color("#78c18b"))
