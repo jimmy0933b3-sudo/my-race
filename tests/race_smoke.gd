@@ -95,15 +95,32 @@ func _run_tests() -> void:
   assert(game.circuit.visual_polish != null and game.circuit.visual_polish.level == game.graphics_quality, "art quality persists while switching course")
   assert(game.circuit.visual_polish.decoration.size() == 3, "per-biome batched fine details")
   assert(game.circuit.visual_polish.cloud_group != null, "high-quality sky landmark layer")
-  if map_index == 0:
-   assert(not game.circuit.visual_polish.environment.glow_enabled, "opening circuit has subdued glow")
+  if map_index == 0 or map_index == 2:
+   assert(not game.circuit.visual_polish.environment.glow_enabled, "bright festival and desert must not bloom")
   else:
-   assert(game.circuit.visual_polish.environment.glow_enabled, "other maps retain vivid premium bloom")
+   assert(game.circuit.visual_polish.environment.glow_enabled, "grass and space retain vivid premium bloom")
+  if map_index == 2:
+   assert(game.circuit.visual_polish.sun.light_energy <= 1.1, "desert sun no longer overexposes road")
+   assert(game.circuit.visual_polish.environment.adjustment_brightness <= 0.80, "desert photo-grade suppresses white clipping")
+   assert(game.circuit.desert_finish != null, "cinematic sandstone scenery is live")
+   assert(game.circuit.desert_finish.rocks_count == 440, "440 custom uneven boulders")
+   assert(game.circuit.desert_finish.grass_count == 930, "930 batch-rendered desert shrubs")
+   assert(game.circuit.desert_finish.cactus_count == 78, "individual sculpted cacti")
+   assert(game.circuit.desert_finish.mesa_count == 16, "layered canyon mesas on skyline")
+   assert(game.circuit.desert_finish.quality_level == game.graphics_quality, "desert scenery obeys quality preset")
+   var road_mat = game.circuit.premium_road.road.material_override
+   assert(road_mat is ShaderMaterial, "rough asphalt uses procedural shader")
+   var desert_asphalt: Color = road_mat.get_shader_parameter("asphalt")
+   assert(desert_asphalt.r < 0.26 and desert_asphalt.b < 0.30, "desert asphalt is genuinely dark neutral gray")
+   var pickups_before = game.pickups.size()
+   assert(pickups_before == 0, "menu track has no active pickups")
   assert(game.circuit.course_art_v3.biome == map_index, "stage-specific centerpiece and structures rebuilt")
   assert(game.circuit.course_art_v3.landmark_count >= 95, "theme landmarks detailed rather than plain tracks")
   assert(game.circuit.course_art_v3.quality_level == game.graphics_quality, "stage art follows quality preference")
   assert(game.circuit.fences != null and game.circuit.fences.fence_panels >= 1000, "continuous 3D safety barriers around the entire course")
   assert(game.circuit.fences.post_count >= 100, "both sides have actual fence supports")
+  if map_index == 2:
+   assert(game.circuit.fences.get_node_or_null("IvoryFencePostCaps") != null, "desert wood railings feature ivory post tops")
   for side in [-1.0, 1.0]:
    for at_index in [0, 24, 69, 115, 172]:
     var far_out: Vector3 = game.circuit.at(at_index, side * 26.0)
@@ -195,6 +212,6 @@ func _run_tests() -> void:
  game._return_to_menu()
  assert(game.race_state == "menu", "back to garage")
  assert(game.showroom.visible, "showroom restored on return")
- print("MONSTER KART SMOKE OK: five kids speed modes, immersive UI with painted track posters and speedometer, handcrafted 3D world landmarks, AI speed scaling, 4 circuits and full minimap")
+ print("MONSTER KART SMOKE OK: five kids speed modes, legible desert and non-blown-out item orbs, detailed sandstone rocks, wooden rails, immersive HUD, 4 circuits and 8-driver minimap")
  game.queue_free()
  quit(0)
