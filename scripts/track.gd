@@ -6,6 +6,8 @@ const WORLD_OVERHAUL = preload("res://scripts/world_overhaul.gd")
 const BARRIER_ART = preload("res://scripts/track_barrier.gd")
 const VISUAL_POLISH = preload("res://scripts/visual_polish.gd")
 const COURSE_ART_V3 = preload("res://scripts/course_art_v3.gd")
+const DESERT_FINISH = preload("res://scripts/desert_finish.gd")
+var desert_finish
 var course_art_v3
 var visual_polish
 var fences
@@ -58,6 +60,10 @@ func _ready() -> void:
  course_art_v3 = COURSE_ART_V3.new()
  add_child(course_art_v3)
  course_art_v3.build(self)
+ if map_index == 2:
+  desert_finish=DESERT_FINISH.new()
+  add_child(desert_finish)
+  desert_finish.build(self)
 
 func at(index: int, lane: float = 0.0) -> Vector3:
  var i = posmod(index, SEGMENTS)
