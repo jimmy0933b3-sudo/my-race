@@ -155,7 +155,7 @@ func _make_hud() -> void:
  pause.pressed.connect(func():pause_requested.emit())
  var home=_button(hud,"⌂",Vector2(925,27),Vector2(61,62),Color("#425778e5"),27)
  home.pressed.connect(func():return_to_menu.emit())
- _text(hud,"AUTO DRIVE",Vector2(481,649),Vector2(330,33),17,PALETTE["paper"],true)
+ _text(hud,"AUTO DRIVE  •  速度可在設定調整",Vector2(435,649),Vector2(404,33),17,PALETTE["paper"],true)
 
 func configure_minimap(track:Node3D,map_index:int)->void:
  if race_minimap != null:
@@ -168,7 +168,7 @@ func update_minimap(hero:Vector3,heading:float,bots:Array[Dictionary])->void:
 
 func update_hud(place:int,lap:int,speed:float,time:float,item:String)->void:
  super.update_hud(place,lap,speed,time,item)
- boost_bar.value=clampf(speed/52.0,0.0,1.0)*100.0
+ boost_bar.value=clampf(speed/(52.0 * [0.48,0.63,0.82,1.0][pace_mode]),0.0,1.0)*100.0
  item_button.text=item if item!="" else "✦\nITEM"
 
 func _make_result() -> void:
