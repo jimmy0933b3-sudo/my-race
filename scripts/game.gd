@@ -418,17 +418,17 @@ func _update_rank() -> void:
 
 func _create_pickups() -> void:
  var orb_mesh = SphereMesh.new()
- orb_mesh.radius = 0.87
- orb_mesh.height = 1.74
+ orb_mesh.radius = 0.63
+ orb_mesh.height = 1.26
  orb_mesh.radial_segments = 12
  orb_mesh.rings = 6
  var mat = StandardMaterial3D.new()
- mat.albedo_color = Color("#a6f5ff")
+ mat.albedo_color = Color("#5fbed0")
  mat.metallic = 0.28
  mat.roughness = 0.17
  mat.emission_enabled = true
- mat.emission = Color("#74d8ff")
- mat.emission_energy_multiplier = 2.1
+ mat.emission = Color("#2d97ba")
+ mat.emission_energy_multiplier = 0.55
  for i in range(16):
   var lane = -3.7 if i % 2 == 0 else 3.7
   var idx = 11 + i * 10
@@ -439,7 +439,7 @@ func _create_pickups() -> void:
   orb.add_child(sphere)
   for j in range(4):
    var sm = BoxMesh.new()
-   sm.size = Vector3(0.17, 1.4, 0.17)
+   sm.size = Vector3(0.13, 0.99, 0.13)
    var arm = MeshInstance3D.new()
    arm.mesh = sm
    arm.material_override = mat
