@@ -52,7 +52,7 @@ func _run_tests() -> void:
  game.interface._select_pace(4)
  assert(game.pace_mode == 4 and is_equal_approx(game._pace_factor(),1.0), "fast speed matches original pace")
  game.interface._select_pace(1)
- assert(game.pace_mode == 1 and is_equal_approx(game._pace_factor(),0.63), "default children's speed is 63 percent")
+ assert(game.pace_mode == 1 and is_equal_approx(game._pace_factor(),0.48), "default children's speed is 48 percent")
  var saved_settings=ConfigFile.new()
  assert(saved_settings.load("user://monsterkart_settings.cfg") == OK, "speed changes are persisted")
  assert(int(saved_settings.get_value("gameplay","pace_mode_v2",-1)) == 1, "last selected speed persists across launches")
@@ -135,7 +135,7 @@ func _run_tests() -> void:
  var fast_delta=float(first_bot["progress"])-first_progress
  assert(fast_delta > slow_delta * 2.8, "all AI racers respond to the speed setting")
  game.interface._select_pace(1)
- assert(is_equal_approx(game._pace_factor(),0.48), "racing restores child-friendly default pace")
+ assert(is_equal_approx(game._pace_factor(),0.48), "racing restores child-friendly default 48 percent pace")
  assert(game.interface.telemetry != null and game.interface.telemetry.accent != Color.WHITE, "speedometer changes color for each world")
  assert(game.interface.race_minimap != null and game.interface.race_minimap.is_ready, "full circuit map initialized")
  assert(game.interface.race_minimap.mapped_points.size() == 181, "minimap displays entire closed track")
