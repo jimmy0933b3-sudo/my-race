@@ -23,7 +23,7 @@ func build(circuit: Node3D, id: int) -> void:
 
 func _palette() -> Array[Color]:
  match biome:
-  0: return [Color("#70c9a5"),Color("#9be0a9"),Color("#d0ad86"),Color("#3e4f70"),Color("#77899e"),Color("#ffa6ca")]
+  0: return [Color("#6ea990"),Color("#8ebca4"),Color("#c6b298"),Color("#303b50"),Color("#53647a"),Color("#d69aaf")]
   1: return [Color("#5abb89"),Color("#98e2a5"),Color("#e1c28f"),Color("#314850"),Color("#61777e"),Color("#a8ffb1")]
   2: return [Color("#d99c63"),Color("#f4d195"),Color("#ca8167"),Color("#574d64"),Color("#857384"),Color("#ffc779")]
   _: return [Color("#334078"),Color("#8b87ce"),Color("#6eabdb"),Color("#212e56"),Color("#6472ba"),Color("#a4eaff")]
@@ -128,7 +128,7 @@ func _road() -> void:
   var angle: float = atan2(-direction.x,-direction.z)
   for lane in [-7.44,7.44]:
    var at: Vector3 = track.at(i,lane)
-   var dash = _box(Vector3(at.x,0.146,at.z),Vector3(0.16,0.018,3.2),pal[5],true)
+   var dash = _box(Vector3(at.x,0.146,at.z),Vector3(0.16,0.018,3.2),pal[5],biome==3)
    dash.rotation.y = angle
   if i%8==0:
    var mark: Vector3 = track.at(i)
