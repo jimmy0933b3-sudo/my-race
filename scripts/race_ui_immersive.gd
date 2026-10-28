@@ -153,7 +153,8 @@ func _make_hud()->void:
  item_button=_button(hud,"✦\n道具",Vector2(1109,551),Vector2(149,148),Color("#b98b5aeb"),28)
  item_button.pressed.connect(func():item_used.emit())
  countdown_label=_text(hud,"",Vector2(430,167),Vector2(433,147),80,PALETTE["gold"],true)
- course_detail=_text(hud,"左、右轉向  ·  自動前進",Vector2(395,110),Vector2(501,35),17,Color("#f7f5e4"),true)
+ _panel(hud,Vector2(391,110),Vector2(503,36),Color("#122a47dc"),Color("#9ac6d680"),12)
+ course_detail=_text(hud,"左、右轉向  ·  自動前進",Vector2(395,111),Vector2(495,33),17,Color("#f8f0e1"),true)
 
 func configure_minimap(track:Node3D,map_index:int)->void:
  super.configure_minimap(track,map_index)
