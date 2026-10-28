@@ -168,7 +168,7 @@ func update_minimap(hero:Vector3,heading:float,bots:Array[Dictionary])->void:
 
 func update_hud(place:int,lap:int,speed:float,time:float,item:String)->void:
  super.update_hud(place,lap,speed,time,item)
- boost_bar.value=clampf(speed/(52.0 * [0.48,0.63,0.82,1.0][pace_mode]),0.0,1.0)*100.0
+ boost_bar.value=clampf(speed/(52.0 * [0.32,0.48,0.63,0.82,1.0][pace_mode]),0.0,1.0)*100.0
  item_button.text=item if item!="" else "✦\nITEM"
 
 func _make_result() -> void:
@@ -243,9 +243,9 @@ func _make_settings() -> void:
   sfx_value.text="遊戲音效  %d%%" % roundi(v*100.0)
   sfx_volume_changed.emit(v))
  _text(settings,"🏎  賽車速度  /  KIDS RACING SPEED",Vector2(386,350),Vector2(516,33),22,PALETTE["gold"])
- var speeds=["慢慢開","輕鬆玩","一般","快速"]
+ var speeds=["超慢","慢慢開","輕鬆玩","一般","快速"]
  for i in range(speeds.size()):
-  var btn=_button(settings,speeds[i],Vector2(385+i*132,391),Vector2(123,51),Color("#426182"),19)
+  var btn=_button(settings,speeds[i],Vector2(383+i*106,391),Vector2(99,51),Color("#426182"),19)
   btn.pressed.connect(_select_pace.bind(i))
   pace_buttons.append(btn)
  pace_description=_text(settings,"",Vector2(380,454),Vector2(525,28),17,PALETTE["muted"],true)
@@ -262,12 +262,13 @@ func _make_settings() -> void:
  back.pressed.connect(_close_settings)
 
 func set_pace_mode(value: int, notify: bool = false) -> void:
- pace_mode=clampi(value,0,3)
+ pace_mode=clampi(value,0,4)
  var details=[
-  "慢慢開：最慢速，適合剛開始玩的孩子",
-  "輕鬆玩：預設慢速，練習轉彎很從容",
-  "一般：車速適中，適合已經熟悉操控",
-  "快速：回到原本的高速競速節奏"
+  "超慢：原版 32%，非常適合初次玩賽車的孩子",
+  "慢慢開：預設 48%，轉彎更有時間反應",
+  "輕鬆玩：原版 63%，適合開始練習甩尾",
+  "一般：原版 82%，比賽更有挑戰性",
+  "快速：原版 100%，完整競速節奏"
  ]
  if pace_description != null:
   pace_description.text=details[pace_mode]
