@@ -25,18 +25,18 @@ func _palette() -> Array[Color]:
  match biome:
   0: return [Color("#6ea990"),Color("#8ebca4"),Color("#c6b298"),Color("#303b50"),Color("#53647a"),Color("#d69aaf")]
   1: return [Color("#5abb89"),Color("#98e2a5"),Color("#e1c28f"),Color("#314850"),Color("#61777e"),Color("#a8ffb1")]
-  2: return [Color("#d99c63"),Color("#f4d195"),Color("#ca8167"),Color("#574d64"),Color("#857384"),Color("#ffc779")]
+  2: return [Color("#b18b61"),Color("#d1ad7c"),Color("#9b735d"),Color("#252d38"),Color("#39434c"),Color("#ddc5a3")]
   _: return [Color("#334078"),Color("#8b87ce"),Color("#6eabdb"),Color("#212e56"),Color("#6472ba"),Color("#a4eaff")]
 
 func _terrain() -> void:
  var pal = _palette()
  var noise = FastNoiseLite.new()
  noise.seed = 81934 + biome * 192
- noise.frequency = 0.014 if biome != 2 else 0.008
+ noise.frequency = 0.014 if biome != 2 else 0.0085
  noise.fractal_octaves = 3
  noise.fractal_gain = 0.48
  noise.fractal_type = FastNoiseLite.FRACTAL_FBM
- var grid := 96
+ var grid := 120
  var extent := 156.0
  var positions: Array[Vector3] = []
  for z in range(grid + 1):
@@ -56,8 +56,8 @@ func _terrain() -> void:
    var blend = smoothstep(12.5,41.0,edge_dist)
    var wave = noise.get_noise_2d(px,pz)
    var fine = noise.get_noise_2d(px*2.4+41.0,pz*2.4) * 1.4
-   var max_height = 10.0 if biome == 2 else 7.2
-   var y = -0.10 + blend * maxf(0.0, wave * max_height + fine + 1.2)
+   var max_height = 12.0 if biome == 2 else 7.2
+   var y = -0.10 + blend * maxf(0.0, wave * max_height + fine + (2.5 if biome == 2 else 1.2))
    positions.append(Vector3(px,y,pz))
  # The previous terrain regenerated each face normal separately, causing
  # chunky faceted triangles. Share smoothed normals across the whole grid.
@@ -131,9 +131,11 @@ func _road() -> void:
    var dash = _box(Vector3(at.x,0.146,at.z),Vector3(0.16,0.018,3.2),pal[5],biome==3)
    dash.rotation.y = angle
   if i%8==0:
-   var mark: Vector3 = track.at(i)
-   var centerline = _box(Vector3(mark.x,0.147,mark.z),Vector3(0.22,0.02,2.75),Color("#fff3dd"),biome==3)
-   centerline.rotation.y = angle
+   # Two dashed white lanes, with dark rough rubber beside each marking.
+   for lane_center in ([-2.5,2.5] if biome==2 else [0.0]):
+    var mark: Vector3 = track.at(i,lane_center)
+    var centerline = _box(Vector3(mark.x,0.158,mark.z),Vector3(0.22,0.023,2.95),Color("#dfe5e2") if biome==2 else Color("#fff3dd"),biome==3)
+    centerline.rotation.y = angle
 
 func _material(c: Color, glow := false) -> StandardMaterial3D:
  var m = StandardMaterial3D.new()
