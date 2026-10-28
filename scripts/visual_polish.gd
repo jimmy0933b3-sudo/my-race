@@ -149,19 +149,22 @@ func set_quality(value:int)->void:
   cloud_group.visible=level>0
  if environment != null:
   environment.fog_enabled = level>0
-  environment.fog_density = 0.0017 if biome!=3 else 0.0011
+  environment.fog_density = 0.00115 if biome==0 else (0.0011 if biome==3 else 0.0017)
   environment.fog_light_color = [
-   Color("#c9e9de"),Color("#badfeb"),Color("#f4ceb2"),Color("#6c72ae")
+   Color("#a8c6bd"),Color("#badfeb"),Color("#f4ceb2"),Color("#6c72ae")
   ][biome]
-  environment.fog_sky_affect=0.17
-  environment.fog_sun_scatter=0.14
-  environment.glow_enabled = level>=2
+  environment.fog_sky_affect=0.07 if biome==0 else 0.17
+  environment.fog_sun_scatter=0.055 if biome==0 else 0.14
+  # The opening theme park has many emissive decorations: disable global
+  # bloom there so the actual road and guardrail silhouettes stay legible.
+  environment.glow_enabled = level>=2 and biome!=0
   environment.glow_intensity=0.82 if level==3 else 0.58
   environment.glow_bloom=0.11 if level==3 else 0.06
   environment.glow_hdr_threshold=1.12
   environment.adjustment_enabled=true
-  environment.adjustment_contrast=1.09 if level==3 else (1.045 if level>0 else 1.0)
-  environment.adjustment_saturation=1.10 if level==3 else (1.075 if level>0 else 1.0)
+  environment.adjustment_contrast=1.12 if biome==0 else (1.09 if level==3 else (1.045 if level>0 else 1.0))
+  environment.adjustment_saturation=0.93 if biome==0 else (1.10 if level==3 else (1.075 if level>0 else 1.0))
+  environment.adjustment_brightness=0.88 if biome==0 else 1.0
  if sun!=null:
   sun.shadow_enabled=level>0
   sun.directional_shadow_max_distance=170.0 if level==3 else 125.0
