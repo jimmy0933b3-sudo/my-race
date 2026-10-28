@@ -132,6 +132,8 @@ func _apply_graphics_quality() -> void:
   circuit.visual_polish.set_quality(graphics_quality)
  if is_instance_valid(circuit) and circuit.course_art_v3 != null:
   circuit.course_art_v3.set_quality(graphics_quality)
+ if is_instance_valid(circuit) and circuit.desert_finish != null:
+  circuit.desert_finish.set_quality(graphics_quality)
 
 func _spawn(index: int, at: Vector3, angle: float) -> Node3D:
  var car = Kart.new()
