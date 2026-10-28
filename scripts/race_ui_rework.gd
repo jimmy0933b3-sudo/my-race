@@ -2,6 +2,10 @@ extends "res://scripts/race_ui.gd"
 ## Complete skin/layout rebuild with one cohesive graphic identity.
 ## Inherits battle controls and signals from the tested UI interface.
 signal quality_changed(level: int)
+signal pace_changed(mode: int)
+var pace_mode := 1
+var pace_buttons: Array[Button] = []
+var pace_description: Label
 var quality_level := 3
 var quality_buttons: Array[Button] = []
 var quality_description: Label
@@ -210,14 +214,14 @@ func _make_settings() -> void:
  settings.mouse_filter=Control.MOUSE_FILTER_IGNORE
  main.add_child(settings)
  _panel(settings,Vector2.ZERO,Vector2(1280,720),Color("#0b142be1"))
- _glow_panel(settings,Vector2(319,37),Vector2(644,654),PALETTE["pink"],Color("#172743fa"),32)
- _text(settings,"SETTINGS  /  AUDIO + GRAPHICS",Vector2(356,59),Vector2(565,45),23,PALETTE["mint"],true)
- _text(settings,"⚙ 遊戲設定",Vector2(365,111),Vector2(546,51),36,PALETTE["paper"],true)
- _glow_panel(settings,Vector2(366,186),Vector2(548,271),PALETTE["mint"],Color("#263955"),18)
- music_value=_text(settings,"背景配樂 60%",Vector2(393,202),Vector2(470,36),22,PALETTE["paper"])
+ _glow_panel(settings,Vector2(319,22),Vector2(644,680),PALETTE["pink"],Color("#172743fa"),32)
+ _text(settings,"SETTINGS  /  AUDIO · SPEED · GRAPHICS",Vector2(356,43),Vector2(565,39),22,PALETTE["mint"],true)
+ _text(settings,"⚙ 遊戲設定",Vector2(365,87),Vector2(546,53),36,PALETTE["paper"],true)
+ _glow_panel(settings,Vector2(366,150),Vector2(548,188),PALETTE["mint"],Color("#263955"),18)
+ music_value=_text(settings,"背景配樂 60%",Vector2(393,155),Vector2(470,33),21,PALETTE["paper"])
  music_slider=HSlider.new()
- music_slider.position=Vector2(408,243)
- music_slider.size=Vector2(460,34)
+ music_slider.position=Vector2(408,195)
+ music_slider.size=Vector2(460,32)
  music_slider.min_value=0
  music_slider.max_value=1
  music_slider.step=0.05
@@ -226,10 +230,10 @@ func _make_settings() -> void:
  music_slider.value_changed.connect(func(v:float):
   music_value.text="背景配樂  %d%%" % roundi(v*100.0)
   music_volume_changed.emit(v))
- sfx_value=_text(settings,"遊戲音效 75%",Vector2(393,320),Vector2(470,36),22,PALETTE["paper"])
+ sfx_value=_text(settings,"遊戲音效 75%",Vector2(393,242),Vector2(470,33),21,PALETTE["paper"])
  sfx_slider=HSlider.new()
- sfx_slider.position=Vector2(408,367)
- sfx_slider.size=Vector2(460,34)
+ sfx_slider.position=Vector2(408,283)
+ sfx_slider.size=Vector2(460,32)
  sfx_slider.min_value=0
  sfx_slider.max_value=1
  sfx_slider.step=0.05
@@ -238,16 +242,43 @@ func _make_settings() -> void:
  sfx_slider.value_changed.connect(func(v:float):
   sfx_value.text="遊戲音效  %d%%" % roundi(v*100.0)
   sfx_volume_changed.emit(v))
- _text(settings,"畫質  /  GRAPHICS",Vector2(388,470),Vector2(509,33),22,PALETTE["gold"])
+ _text(settings,"🏎  賽車速度  /  KIDS RACING SPEED",Vector2(386,350),Vector2(516,33),22,PALETTE["gold"])
+ var speeds=["慢慢開","輕鬆玩","一般","快速"]
+ for i in range(speeds.size()):
+  var btn=_button(settings,speeds[i],Vector2(385+i*132,391),Vector2(123,51),Color("#426182"),19)
+  btn.pressed.connect(_select_pace.bind(i))
+  pace_buttons.append(btn)
+ pace_description=_text(settings,"",Vector2(380,454),Vector2(525,28),17,PALETTE["muted"],true)
+ set_pace_mode(pace_mode,false)
+ _text(settings,"🎨  畫質  /  GRAPHICS",Vector2(388,493),Vector2(509,33),22,PALETTE["gold"])
  var names = ["省電", "標準", "精緻", "極致"]
  for i in range(names.size()):
-  var button=_button(settings,names[i],Vector2(386+i*132,510),Vector2(122,49),Color("#426182"),20)
+  var button=_button(settings,names[i],Vector2(386+i*132,531),Vector2(122,49),Color("#426182"),19)
   button.pressed.connect(_select_quality.bind(i))
   quality_buttons.append(button)
- quality_description=_text(settings,"",Vector2(378,570),Vector2(528,29),17,PALETTE["muted"],true)
+ quality_description=_text(settings,"",Vector2(378,592),Vector2(528,29),17,PALETTE["muted"],true)
  set_quality_level(quality_level,false)
- var back=_button(settings,"儲存並返回",Vector2(395,609),Vector2(487,66),Color("#3bab9d"),26)
+ var back=_button(settings,"儲存並返回",Vector2(395,632),Vector2(487,56),Color("#3bab9d"),24)
  back.pressed.connect(_close_settings)
+
+func set_pace_mode(value: int, notify: bool = false) -> void:
+ pace_mode=clampi(value,0,3)
+ var details=[
+  "慢慢開：最慢速，適合剛開始玩的孩子",
+  "輕鬆玩：預設慢速，練習轉彎很從容",
+  "一般：車速適中，適合已經熟悉操控",
+  "快速：回到原本的高速競速節奏"
+ ]
+ if pace_description != null:
+  pace_description.text=details[pace_mode]
+ for i in range(pace_buttons.size()):
+  var chosen=i==pace_mode
+  pace_buttons[i].add_theme_stylebox_override("normal",_style(Color("#459f9c") if chosen else Color("#314762"),Color("#ffe4a2") if chosen else Color("#71829b"),3 if chosen else 1,14))
+ if notify:
+  pace_changed.emit(pace_mode)
+
+func _select_pace(mode: int) -> void:
+ set_pace_mode(mode,true)
 
 func set_quality_level(value: int, notify: bool = false) -> void:
  quality_level=clampi(value,0,3)
