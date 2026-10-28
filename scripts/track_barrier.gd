@@ -18,14 +18,19 @@ func build(track: Node3D, course_id: int) -> void:
   [Color("#8ca8d2"), Color("#6e89ed"), Color("#9ff8ff")]
  ][clampi(course_id, 0, 3)]
  for side in [-1.0, 1.0]:
-  # Bottom crash wall, perforation-like dark insert, and luminous upper band.
-  _ribbon(side, 0.12, 0.76, palette[0], false)
-  _ribbon(side, 0.79, 1.56, palette[1].darkened(0.44), false)
-  _ribbon(side, 1.25, 1.42, palette[1], false)
-  _ribbon(side, 1.63, HEIGHT, palette[2], course_id == 3)
-  _posts(side, palette[1], palette[2], course_id == 3)
+  if course_id == 2:
+   # Real wooden three-beam desert guardrail. The previous tall bright
+   # solid wall hid the scenery, creating an overexposed flat strip.
+   for band in [[0.22,0.34],[0.68,0.88],[1.12,1.32],[1.48,1.59]]:
+    _ribbon(side,band[0],band[1],Color("#986b4c") if band[0] < 1.0 else Color("#754f38"),false,true)
+  else:
+   _ribbon(side, 0.12, 0.76, palette[0], false)
+   _ribbon(side, 0.79, 1.56, palette[1].darkened(0.44), false)
+   _ribbon(side, 1.25, 1.42, palette[1], false)
+   _ribbon(side, 1.63, HEIGHT, palette[2], course_id == 3)
+  _posts(side, Color("#926447") if course_id == 2 else palette[1], Color("#ded7c9") if course_id == 2 else palette[2], course_id == 3, course_id == 2)
 
-func _ribbon(side: float, low: float, high: float, color: Color, glow: bool) -> void:
+func _ribbon(side: float, low: float, high: float, color: Color, glow: bool, wood: bool = false) -> void:
  var tool = SurfaceTool.new()
  tool.begin(Mesh.PRIMITIVE_TRIANGLES)
  for i in range(circuit.SEGMENTS):
@@ -44,8 +49,8 @@ func _ribbon(side: float, low: float, high: float, color: Color, glow: bool) -> 
  inst.mesh = tool.commit()
  var mat = StandardMaterial3D.new()
  mat.albedo_color = color
- mat.roughness = 0.42
- mat.metallic = 0.17
+ mat.roughness = 0.85 if wood else 0.42
+ mat.metallic = 0.02 if wood else 0.17
  mat.cull_mode = BaseMaterial3D.CULL_DISABLED
  if glow:
   mat.emission_enabled = true
@@ -54,7 +59,7 @@ func _ribbon(side: float, low: float, high: float, color: Color, glow: bool) -> 
  inst.material_override = mat
  add_child(inst)
 
-func _posts(side: float, body: Color, crown: Color, neon: bool) -> void:
+func _posts(side: float, body: Color, crown: Color, neon: bool, wood: bool = false) -> void:
  var cyl = CylinderMesh.new()
  cyl.top_radius = 0.19
  cyl.bottom_radius = 0.24
@@ -62,8 +67,8 @@ func _posts(side: float, body: Color, crown: Color, neon: bool) -> void:
  cyl.radial_segments = 9
  var mat = StandardMaterial3D.new()
  mat.albedo_color = body.darkened(0.18)
- mat.metallic = 0.42
- mat.roughness = 0.28
+ mat.metallic = 0.02 if wood else 0.42
+ mat.roughness = 0.83 if wood else 0.28
  var count = int(ceil(float(circuit.SEGMENTS) / 3.0))
  var instances = MultiMesh.new()
  instances.transform_format = MultiMesh.TRANSFORM_3D
@@ -76,4 +81,26 @@ func _posts(side: float, body: Color, crown: Color, neon: bool) -> void:
  display.multimesh = instances
  display.material_override = mat
  add_child(display)
+ if wood:
+  # One shared crown mesh for every wooden post, avoiding hundreds of draws.
+  var cap_mesh=SphereMesh.new()
+  cap_mesh.radius=0.22
+  cap_mesh.height=0.44
+  cap_mesh.radial_segments=14
+  cap_mesh.rings=7
+  var caps=MultiMesh.new()
+  caps.transform_format=MultiMesh.TRANSFORM_3D
+  caps.mesh=cap_mesh
+  caps.instance_count=count
+  for i in range(count):
+   var p:Vector3=circuit.at(i*3,side*(circuit.HALF_WIDTH+EDGE_OFFSET))
+   caps.set_instance_transform(i,Transform3D(Basis(),Vector3(p.x,HEIGHT+0.10,p.z)))
+  var cap_display=MultiMeshInstance3D.new()
+  cap_display.name="IvoryFencePostCaps"
+  cap_display.multimesh=caps
+  var cap_material=StandardMaterial3D.new()
+  cap_material.albedo_color=crown
+  cap_material.roughness=0.63
+  cap_display.material_override=cap_material
+  add_child(cap_display)
  post_count += count
