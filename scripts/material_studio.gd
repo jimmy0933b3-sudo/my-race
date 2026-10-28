@@ -23,26 +23,27 @@ void vertex() {
  world_pos = (MODEL_MATRIX * vec4(VERTEX,1.0)).xyz;
 }
 void fragment() {
- // Four distinct spatial frequencies: broad age variation, tar, gravel
- // and sharp reflective aggregate. All detail remains crisp on 8x MSAA.
- float broad = surface_noise(world_pos.xz * 0.13);
- float age = surface_noise(world_pos.xz * 0.58);
- float grain = surface_noise(world_pos.xz * 5.7);
- float gravel = surface_noise(world_pos.xz * 22.0);
- float aggregate = step(0.945, hash21(floor(world_pos.xz * 13.0)));
- vec3 base = mix(asphalt.rgb * 0.73, fleck.rgb, broad * 0.38 + age * 0.18);
- base += (grain - 0.5) * 0.087 + (gravel - 0.5) * 0.036 + aggregate * 0.07;
- // Thin, soft tire-wear bands embedded in asphalt, not floating geometry.
- float l = exp(-pow((UV.y - 0.28) * 34.0, 2.0));
- float r = exp(-pow((UV.y - 0.72) * 34.0, 2.0));
- float faded = surface_noise(world_pos.xz * 1.3);
- float wear = (l + r) * (0.38 + faded * 0.36);
- base = mix(base, base * 0.57, wear);
- float seams = step(0.985, surface_noise(world_pos.xz * 0.27 + vec2(113.0,17.0)));
- base *= 1.0 - seams * 0.10;
- ALBEDO = max(base, vec3(0.015));
- ROUGHNESS = 0.78 + gravel * 0.13;
- SPECULAR = 0.14;
+ // Art-directed black-top asphalt: aggregate sparkle is tiny and never
+ // emissive on the desert course. Lower middle frequencies avoid noisy glare.
+ float patch = surface_noise(world_pos.xz * 0.085);
+ float wear = surface_noise(world_pos.xz * 0.35);
+ float grit = surface_noise(world_pos.xz * 3.1);
+ float pebble = surface_noise(world_pos.xz * 14.4);
+ float dust = surface_noise(world_pos.xz * 0.95);
+ float aggregate = smoothstep(0.91,0.99,hash21(floor(world_pos.xz * 22.0)));
+ vec3 base = mix(asphalt.rgb * 0.66, fleck.rgb * 0.64, patch * 0.23 + wear * 0.12);
+ base += (grit - 0.50) * 0.055 + (pebble - 0.50) * 0.026;
+ base += aggregate * 0.030;
+ float tire_a = exp(-pow((UV.y - 0.26) * 30.0, 2.0));
+ float tire_b = exp(-pow((UV.y - 0.74) * 30.0, 2.0));
+ float skid = (tire_a + tire_b) * (0.30 + dust * 0.28);
+ base *= 1.0 - skid * 0.20;
+ float faint_cracks = step(0.94,surface_noise(world_pos.xz * 0.21 + vec2(29.0,72.0)));
+ base *= 1.0 - faint_cracks * 0.11;
+ ALBEDO = clamp(base,vec3(0.014),vec3(0.42));
+ METALLIC = 0.0;
+ ROUGHNESS = clamp(0.87 + pebble * 0.09 - aggregate * 0.07,0.76,0.98);
+ SPECULAR = 0.12;
  EMISSION = base * glow_strength;
 }
 """
@@ -74,7 +75,7 @@ void fragment(){
  float dots=noise(w.xz*2.7);
  vec3 c=mix(low_tint.rgb,high_tint.rgb, smoothstep(0.25,0.83,bands));
  c=mix(c,dust_tint.rgb,smoothstep(0.56,0.90,coarse)*0.20);
- c*=0.93+0.12*dots;
+ c*=0.89+0.09*dots;\n float subtle_ridges = noise(w.xz*3.6);\n c*=0.93+0.07*subtle_ridges;
  ALBEDO=c; ROUGHNESS=0.94; SPECULAR=0.11;
 }
 """
