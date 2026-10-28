@@ -2,7 +2,7 @@ extends Node3D
 ## Monster Kart 3D: three-lap arcade racing with drift, rivals and item battles.
 const Kart = preload("res://scripts/monster_kart.gd")
 const Circuit = preload("res://scripts/track.gd")
-const RaceUI = preload("res://scripts/race_ui_rework.gd")
+const RaceUI = preload("res://scripts/race_ui_immersive.gd")
 const GarageStage = preload("res://scripts/garage_stage.gd")
 const ArcadeAudio = preload("res://scripts/audio.gd")
 const LAPS = 3
