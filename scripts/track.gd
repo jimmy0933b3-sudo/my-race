@@ -5,6 +5,8 @@ const BIOME_WORLD = preload("res://scripts/biome_world.gd")
 const WORLD_OVERHAUL = preload("res://scripts/world_overhaul.gd")
 const BARRIER_ART = preload("res://scripts/track_barrier.gd")
 const VISUAL_POLISH = preload("res://scripts/visual_polish.gd")
+const COURSE_ART_V3 = preload("res://scripts/course_art_v3.gd")
+var course_art_v3
 var visual_polish
 var fences
 var premium_road
@@ -53,6 +55,9 @@ func _ready() -> void:
  visual_polish = VISUAL_POLISH.new()
  add_child(visual_polish)
  visual_polish.build(self)
+ course_art_v3 = COURSE_ART_V3.new()
+ add_child(course_art_v3)
+ course_art_v3.build(self)
 
 func at(index: int, lane: float = 0.0) -> Vector3:
  var i = posmod(index, SEGMENTS)
