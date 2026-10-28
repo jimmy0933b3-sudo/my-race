@@ -6,7 +6,7 @@ const RaceUI = preload("res://scripts/race_ui_rework.gd")
 const GarageStage = preload("res://scripts/garage_stage.gd")
 const ArcadeAudio = preload("res://scripts/audio.gd")
 const LAPS = 3
-const PACE_MULTIPLIERS = [0.48, 0.63, 0.82, 1.0]
+const PACE_MULTIPLIERS = [0.32, 0.48, 0.63, 0.82, 1.0]
 var circuit
 var showroom
 var camera: Camera3D
@@ -47,7 +47,7 @@ func _ready() -> void:
  var saved_settings = ConfigFile.new()
  if saved_settings.load("user://monsterkart_settings.cfg") == OK:
   graphics_quality = clampi(int(saved_settings.get_value("graphics", "quality_ultra", 3)), 0, 3)
-  pace_mode = clampi(int(saved_settings.get_value("gameplay", "pace_mode", 1)), 0, 3)
+  pace_mode = clampi(int(saved_settings.get_value("gameplay", "pace_mode_v2", 1)), 0, 4)
  audio = ArcadeAudio.new()
  audio.name = "MusicAndEffects"
  add_child(audio)
@@ -100,14 +100,14 @@ func _save_preferences() -> void:
  var settings = ConfigFile.new()
  settings.load("user://monsterkart_settings.cfg")
  settings.set_value("graphics", "quality_ultra", graphics_quality)
- settings.set_value("gameplay", "pace_mode", pace_mode)
+ settings.set_value("gameplay", "pace_mode_v2", pace_mode)
  settings.save("user://monsterkart_settings.cfg")
 
 func _pace_factor() -> float:
  return float(PACE_MULTIPLIERS[pace_mode])
 
 func _set_pace_mode(value: int) -> void:
- pace_mode = clampi(value, 0, 3)
+ pace_mode = clampi(value, 0, 4)
  _save_preferences()
 
 func _set_graphics_quality(value: int) -> void:
