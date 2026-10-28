@@ -58,7 +58,23 @@ def main():
     if matches != 1:
         raise SystemExit("Android preset missing version/name")
     preset.write_text(text, encoding="utf-8")
-    print(f"Fixed certificate prepared; versionCode={code}; versionName=0.1.{run}")
+    # The actual in-game menu must show the same version as Android's package manifest.
+    project = Path("project.godot")
+    project_text = project.read_text("utf-8")
+    project_text, matches = re.subn(
+        r'(?m)^config/version="[^"]+"
+
+
+if __name__ == "__main__":
+    main()
+,
+        f'config/version="0.1.{run}"',
+        project_text,
+    )
+    if matches != 1:
+        raise SystemExit("Godot project missing application/config/version")
+    project.write_text(project_text, encoding="utf-8")
+    print(f"Fixed certificate prepared; versionCode={code}; versionName=0.1.{run}; menuVersion=0.1.{run}")
 
 
 if __name__ == "__main__":

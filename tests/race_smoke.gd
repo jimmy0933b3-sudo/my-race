@@ -33,6 +33,8 @@ func _run_tests() -> void:
  assert(not game.circuit.visual_polish.environment.glow_enabled, "festival avoids overly intense full-screen bloom")
  assert(game.circuit.premium_road.deco_count >= 70, "curved neon gates and stadium spectators")
  assert(game.interface.settings != null, "settings screen")
+ assert(game.interface.build_version_label != null, "release version is displayed in game")
+ assert(game.interface.build_version_label.text == "版本 v" + str(ProjectSettings.get_setting("application/config/version", "")), "menu uses actual exported build version")
  assert(game.interface.telemetry != null, "custom analog speed gauge present")
  assert(game.interface.map_buttons.size() == 4, "all four illustrated world selection cards present")
  assert(game.interface.map_buttons[0].get_child_count() >= 3, "map card contains unique illustrated poster and labels")

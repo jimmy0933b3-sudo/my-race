@@ -112,7 +112,16 @@ jobs:
           SHA="$("$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --print-certs "$APK" | sed -n 's/^Signer #1 certificate SHA-256 digest: //p' | head -n 1)"
           test -n "$SHA"
           echo "SIGNER_SHA256=$SHA" >> "$GITHUB_ENV"
-          "$ANDROID_HOME/build-tools/35.0.0/aapt" dump badging "$APK" | head -n 7
+          AAPT_OUTPUT="$("$ANDROID_HOME/build-tools/35.0.0/aapt" dump badging "$APK")"
+          sed -n '1,7p' <<< "$AAPT_OUTPUT"
+          PKG_LINE="${AAPT_OUTPUT%%$'\n'*}"
+          EXPECTED_VERSION="0.1.$GITHUB_RUN_NUMBER"
+          EXPECTED_CODE="$((10000 + GITHUB_RUN_NUMBER))"
+          [[ "$PKG_LINE" == *"name='com.jimmy0933.monsterkart'"* ]] || { echo "::error::Wrong Android package"; exit 1; }
+          [[ "$PKG_LINE" == *"versionCode='$EXPECTED_CODE'"* ]] || { echo "::error::Wrong APK versionCode (wanted $EXPECTED_CODE)"; exit 1; }
+          [[ "$PKG_LINE" == *"versionName='$EXPECTED_VERSION'"* ]] || { echo "::error::Wrong APK versionName (wanted $EXPECTED_VERSION)"; exit 1; }
+          grep -Fqx "config/version=\"$EXPECTED_VERSION\"" project.godot || { echo "::error::Menu version and APK version differ"; exit 1; }
+          echo "Version: $EXPECTED_VERSION (Android code $EXPECTED_CODE)" >> "$GITHUB_STEP_SUMMARY"
           echo "Signed Monster Kart APK certificate SHA256: $SHA" >> "$GITHUB_STEP_SUMMARY"
 
       - name: Publish release and remove older releases
@@ -136,17 +145,19 @@ jobs:
             exit 1
           fi
           tag="v0.1.$GITHUB_RUN_NUMBER"
+          apk_name="MonsterKart-${tag}.apk"
+          cp build/MonsterKart-latest.apk "build/$apk_name"
           if ! gh release view "$tag" >/dev/null 2>&1; then
-            gh release create "$tag" build/MonsterKart-latest.apk \
+            gh release create "$tag" "build/$apk_name" \
               --target "$GITHUB_SHA" \
               --title "怪獸甩尾盃 3D · 最新 APK ($tag)" \
               --notes "$(printf '12 monster karts · 3D racing · touch drift · item battles\nSigner SHA256: %s\nCommit: %s' "$SIGNER_SHA256" "$GITHUB_SHA")" \
               --latest
           else
-            gh release upload "$tag" build/MonsterKart-latest.apk --clobber
+            gh release upload "$tag" "build/$apk_name" --clobber
           fi
           names="$(gh release view "$tag" --json assets --jq '.assets[].name')"
-          grep -Fxq 'MonsterKart-latest.apk' <<< "$names"
+          grep -Fxq "$apk_name" <<< "$names"
           # Keep the previous release until the new APK has been uploaded and verified.
           gh api --paginate "repos/$REPO/releases?per_page=100" --jq '.[].tag_name' |
             while IFS= read -r prior; do

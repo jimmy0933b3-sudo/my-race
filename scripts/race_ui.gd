@@ -21,6 +21,7 @@ var right_held := false
 var drift_held := false
 var main: Control
 var menu: Control
+var build_version_label: Label
 var hud: Control
 var result: Control
 var pause_page: Control
@@ -111,6 +112,7 @@ func _make_menu() -> void:
  main.add_child(menu)
  var bg = _panel(menu, Vector2(27, 25), Vector2(590, 668), Color("#17233aeb"), Color("#b5ddff66"), 28)
  _text(menu, "MONSTER KART", Vector2(56, 42), Vector2(522, 55), 43, Color("#ffdb82"))
+ build_version_label = _text(menu, "版本 v" + _build_version(), Vector2(1004, 22), Vector2(248, 37), 20, Color("#eef5ff"), true)
  _text(menu, "怪獸甩尾盃  ·  3D", Vector2(58, 95), Vector2(486, 42), 25, Color("#b5e9ff"))
  _text(menu, "挑選你的怪獸座駕", Vector2(59, 144), Vector2(380, 40), 21, Color("#eff3ff"))
  var settings_button = _button(menu, "⚙ 設定", Vector2(456, 140), Vector2(134, 43), Color("#365d88"), 19)
@@ -259,6 +261,7 @@ func _make_pause() -> void:
  _panel(pause_page, Vector2.ZERO, Vector2(1280, 720), Color("#091426bf"))
  _panel(pause_page, Vector2(347, 94), Vector2(586, 540), Color("#1a2946f5"), Color("#b8ebff99"), 30)
  _text(pause_page, "Ⅱ  比賽暫停", Vector2(390, 117), Vector2(500, 75), 43, Color("#ffdf91"), true)
+ _text(pause_page, "目前版本 v" + _build_version(), Vector2(756, 600), Vector2(147, 26), 14, Color("#c4d6ea"), true)
  _text(pause_page, "休息一下，怪獸會等你！", Vector2(397, 195), Vector2(484, 49), 22, Color("#c5ecfa"), true)
  var resume_button = _button(pause_page, "▶  繼續比賽", Vector2(395, 260), Vector2(486, 73), Color("#42a785"), 29)
  resume_button.pressed.connect(func(): resume_requested.emit())
@@ -278,6 +281,7 @@ func _make_settings() -> void:
  _panel(settings, Vector2.ZERO, Vector2(1280, 720), Color("#081021dd"))
  _panel(settings, Vector2(313, 68), Vector2(654, 587), Color("#192943f7"), Color("#b4eaffaa"), 28)
  _text(settings, "⚙  遊戲設定", Vector2(353, 99), Vector2(574, 68), 42, Color("#ffe3a2"), true)
+ _text(settings, "目前版本 v" + _build_version(), Vector2(745, 120), Vector2(186, 35), 18, Color("#d6e7ff"), true)
  _text(settings, "聲音與操控", Vector2(361, 167), Vector2(558, 35), 21, Color("#c0eafe"), true)
  _panel(settings, Vector2(350, 225), Vector2(580, 267), Color("#283b59e6"), Color("#ffffff33"), 18)
  music_value = _text(settings, "🎵  背景配樂  60%", Vector2(382, 239), Vector2(520, 42), 24, Color("#ffffff"))
@@ -346,3 +350,6 @@ func show_pause() -> void:
  settings.visible = false
  pause_page.visible = true
  _release_controls()
+
+func _build_version() -> String:
+ return str(ProjectSettings.get_setting("application/config/version", "0.1.0-dev"))
