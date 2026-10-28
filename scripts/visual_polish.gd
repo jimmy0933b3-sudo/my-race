@@ -113,7 +113,7 @@ func _build_sky_landmarks() -> void:
    var radius = rng.randf_range(92.0,180.0)
    var p = Vector3(cos(angle)*radius,rng.randf_range(21.0,42.0),sin(angle)*radius)
    var scale_f = rng.randf_range(0.8,1.5)
-   var c = Color("#fffaf1") if biome != 2 else Color("#ffefce")
+   var c = Color("#fffaf1") if biome != 2 else Color("#b9c6ca")
    for part in range(5):
     var off = Vector3((part-2)*3.2*scale_f,sin(part*1.7)*0.7,-float(part%2)*1.6)
     var height_f = 2.3+2.1*(1.0-abs(part-2)/2.0)
@@ -131,7 +131,7 @@ func _cloud_ball(pos:Vector3,dims:Vector3,col:Color,glow:bool)->void:
  node.scale = dims
  var mat=StandardMaterial3D.new()
  mat.albedo_color = col
- mat.shading_mode=BaseMaterial3D.SHADING_MODE_UNSHADED
+ mat.shading_mode=BaseMaterial3D.SHADING_MODE_PER_PIXEL
  if glow:
   mat.emission_enabled=true
   mat.emission=col
@@ -149,22 +149,22 @@ func set_quality(value:int)->void:
   cloud_group.visible=level>0
  if environment != null:
   environment.fog_enabled = level>0
-  environment.fog_density = 0.00115 if biome==0 else (0.0011 if biome==3 else 0.0017)
+  environment.fog_density = 0.00115 if biome==0 else (0.00078 if biome==2 else (0.0011 if biome==3 else 0.0017))
   environment.fog_light_color = [
-   Color("#a8c6bd"),Color("#badfeb"),Color("#f4ceb2"),Color("#6c72ae")
+   Color("#a8c6bd"),Color("#badfeb"),Color("#a9a6a0"),Color("#6c72ae")
   ][biome]
-  environment.fog_sky_affect=0.07 if biome==0 else 0.17
-  environment.fog_sun_scatter=0.055 if biome==0 else 0.14
+  environment.fog_sky_affect=0.04 if biome==2 else (0.07 if biome==0 else 0.17)
+  environment.fog_sun_scatter=0.012 if biome==2 else (0.055 if biome==0 else 0.14)
   # The opening theme park has many emissive decorations: disable global
   # bloom there so the actual road and guardrail silhouettes stay legible.
-  environment.glow_enabled = level>=2 and biome!=0
+  environment.glow_enabled = level>=2 and biome!=0 and biome!=2
   environment.glow_intensity=0.82 if level==3 else 0.58
   environment.glow_bloom=0.11 if level==3 else 0.06
   environment.glow_hdr_threshold=1.12
   environment.adjustment_enabled=true
-  environment.adjustment_contrast=1.12 if biome==0 else (1.09 if level==3 else (1.045 if level>0 else 1.0))
-  environment.adjustment_saturation=0.93 if biome==0 else (1.10 if level==3 else (1.075 if level>0 else 1.0))
-  environment.adjustment_brightness=0.88 if biome==0 else 1.0
+  environment.adjustment_contrast=1.13 if biome==2 else (1.12 if biome==0 else (1.09 if level==3 else (1.045 if level>0 else 1.0)))
+  environment.adjustment_saturation=0.98 if biome==2 else (0.93 if biome==0 else (1.10 if level==3 else (1.075 if level>0 else 1.0)))
+  environment.adjustment_brightness=0.78 if biome==2 else (0.88 if biome==0 else 1.0)
  if sun!=null:
   sun.shadow_enabled=level>0
   sun.directional_shadow_max_distance=170.0 if level==3 else 125.0
