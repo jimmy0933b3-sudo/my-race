@@ -6,6 +6,7 @@ const RaceUI = preload("res://scripts/race_ui_rework.gd")
 const GarageStage = preload("res://scripts/garage_stage.gd")
 const ArcadeAudio = preload("res://scripts/audio.gd")
 const LAPS = 3
+const PACE_MULTIPLIERS = [0.48, 0.63, 0.82, 1.0]
 var circuit
 var showroom
 var camera: Camera3D
@@ -21,6 +22,7 @@ var race_state := "menu"
 var selected := 0
 var selected_map := 0
 var graphics_quality := 3
+var pace_mode := 1
 var yaw := 0.0
 var speed := 0.0
 var heading_steer := 0.0
@@ -45,6 +47,7 @@ func _ready() -> void:
  var saved_settings = ConfigFile.new()
  if saved_settings.load("user://monsterkart_settings.cfg") == OK:
   graphics_quality = clampi(int(saved_settings.get_value("graphics", "quality_ultra", 3)), 0, 3)
+  pace_mode = clampi(int(saved_settings.get_value("gameplay", "pace_mode", 1)), 0, 3)
  audio = ArcadeAudio.new()
  audio.name = "MusicAndEffects"
  add_child(audio)
@@ -71,6 +74,8 @@ func _ready() -> void:
  interface.music_volume_changed.connect(audio.set_music_level)
  interface.sfx_volume_changed.connect(audio.set_sfx_level)
  interface.quality_changed.connect(_set_graphics_quality)
+ interface.pace_changed.connect(_set_pace_mode)
+ interface.set_pace_mode(pace_mode, false)
  interface.set_quality_level(graphics_quality, false)
  _apply_graphics_quality()
  interface.set_audio_levels(audio.music_level, audio.sfx_level)
@@ -91,12 +96,24 @@ func _choose_map(index: int) -> void:
  _apply_graphics_quality()
  _menu_camera(1.0)
 
+func _save_preferences() -> void:
+ var settings = ConfigFile.new()
+ settings.load("user://monsterkart_settings.cfg")
+ settings.set_value("graphics", "quality_ultra", graphics_quality)
+ settings.set_value("gameplay", "pace_mode", pace_mode)
+ settings.save("user://monsterkart_settings.cfg")
+
+func _pace_factor() -> float:
+ return float(PACE_MULTIPLIERS[pace_mode])
+
+func _set_pace_mode(value: int) -> void:
+ pace_mode = clampi(value, 0, 3)
+ _save_preferences()
+
 func _set_graphics_quality(value: int) -> void:
  graphics_quality = clampi(value, 0, 3)
  _apply_graphics_quality()
- var saved_settings = ConfigFile.new()
- saved_settings.set_value("graphics", "quality_ultra", graphics_quality)
- saved_settings.save("user://monsterkart_settings.cfg")
+ _save_preferences()
 
 func _apply_graphics_quality() -> void:
  # Compatibility renderer supports real MSAA edge smoothing, unlike TAA/FXAA.
@@ -286,16 +303,18 @@ func _update_player(dt: float) -> void:
  var offset = player.position.distance_to(circuit.centers[nearest])
  var offroad = offset > Circuit.HALF_WIDTH - 1.95
  var chosen_stats = Kart.ROSTER[selected]
+ var pace_factor = _pace_factor()
  var max_speed = 35.0 + float(chosen_stats["speed"]) * 1.6
  if offroad:
   max_speed *= 0.96
  if boost_time > 0.0:
   max_speed += 17.0
- var acceleration = 23.0 if offroad else 21.0
+ max_speed *= pace_factor
+ var acceleration = (23.0 if offroad else 21.0) * pace_factor
  speed = move_toward(speed, max_speed, dt * acceleration)
  var turning = 0.87 + float(chosen_stats["grip"]) * 0.09
- var turn_power = turning * (0.60 + clampf(speed / 34.0, 0.0, 1.0))
- var active_drift = drift and absf(heading_steer) > 0.16 and speed > 10.0
+ var turn_power = turning * (0.60 + clampf(speed / (34.0 * pace_factor), 0.0, 1.0))
+ var active_drift = drift and absf(heading_steer) > 0.16 and speed > 10.0 * pace_factor
  if active_drift:
   drift_charge += dt
   turn_power *= 1.32
@@ -365,7 +384,7 @@ func _update_ai(dt: float) -> void:
   var car = bot["car"]
   stun = maxf(0.0, stun - dt)
   bot["stun"] = stun
-  var pace: float = bot["speed"] * (0.26 if stun > 0.0 else 1.0)
+  var pace: float = bot["speed"] * _pace_factor() * (0.26 if stun > 0.0 else 1.0)
   var prog: float = bot["progress"] + dt * pace / seg_len
   bot["progress"] = prog
   var side: float = bot["lane"] + sin(prog * 0.10 + bot["seed"]) * 1.3
