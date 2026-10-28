@@ -201,44 +201,44 @@ func _build_world() -> void:
  env.environment.background_mode = Environment.BG_SKY
  var sky = Sky.new()
  var sky_paint = ProceduralSkyMaterial.new()
- sky_paint.sky_top_color = Color("#66b7f5")
- sky_paint.sky_horizon_color = Color("#f9d5d8")
- sky_paint.ground_horizon_color = Color("#a5e1d3")
- sky_paint.ground_bottom_color = Color("#7dc69b")
+ sky_paint.sky_top_color = Color("#649cbe")
+ sky_paint.sky_horizon_color = Color("#c8c4cb")
+ sky_paint.ground_horizon_color = Color("#98c5b9")
+ sky_paint.ground_bottom_color = Color("#7caf93")
  sky.sky_material = sky_paint
  env.environment.sky = sky
  env.environment.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
- env.environment.ambient_light_color = Color("#cce9ff")
- env.environment.ambient_light_energy = 0.75
+ env.environment.ambient_light_color = Color("#c1d6e1")
+ env.environment.ambient_light_energy = 0.53
  env.environment.reflected_light_source = Environment.REFLECTION_SOURCE_BG
  env.environment.tonemap_mode = Environment.TONE_MAPPER_FILMIC
  add_child(env)
  var sun = DirectionalLight3D.new()
  sun.rotation_degrees = Vector3(-57, -35, -12)
- sun.light_color = Color("#fff3d6")
- sun.light_energy = 1.6
+ sun.light_color = Color("#f4e9d9")
+ sun.light_energy = 1.13
  sun.shadow_enabled = true
  sun.directional_shadow_max_distance = 110.0
  add_child(sun)
  var fill = DirectionalLight3D.new()
  fill.rotation_degrees = Vector3(45, 145, 0)
  fill.light_color = Color("#9dd5ff")
- fill.light_energy = 0.4
+ fill.light_energy = 0.19
  add_child(fill)
 
  _box(Vector3(0, -0.30, 0), Vector3(355, 0.4, 315), Color("#71c895"))
  _box(Vector3(0, -0.10, 0), Vector3(130, 0.22, 86), Color("#89d7a9"))
- _ribbon(HALF_WIDTH + 2.0, 0.022, Color("#f4e6be"))
- _ribbon(HALF_WIDTH + 0.78, 0.055, Color("#f48aa7"))
- _ribbon(HALF_WIDTH, 0.086, Color("#39445f"))
- _ribbon(HALF_WIDTH - 0.44, 0.092, Color("#53647f"))
- _ribbon(HALF_WIDTH - 3.0, 0.096, Color("#5e7191"))
+ _ribbon(HALF_WIDTH + 2.0, 0.022, Color("#c2bcae"))
+ _ribbon(HALF_WIDTH + 0.78, 0.055, Color("#c87490"))
+ _ribbon(HALF_WIDTH, 0.086, Color("#27344c"))
+ _ribbon(HALF_WIDTH - 0.44, 0.092, Color("#374660"))
+ _ribbon(HALF_WIDTH - 3.0, 0.096, Color("#4f5d79"))
  for i in range(0, SEGMENTS, 3):
   var a = at(i, 0.0)
   var b = at(i + 1, 0.0)
   var t = (b - a).normalized()
   var mid = (a + b) * 0.5
-  var dash = _box(Vector3(mid.x, 0.105, mid.z), Vector3(0.28, 0.027, 1.65), Color("#ffe9a4"), null, true)
+  var dash = _box(Vector3(mid.x, 0.105, mid.z), Vector3(0.28, 0.027, 1.65), Color("#eddda5"), null, false)
   dash.rotation.y = atan2(-t.x, -t.z)
  _add_raceway_details()
  for i in range(0, SEGMENTS, 5):
